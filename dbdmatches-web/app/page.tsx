@@ -1,65 +1,155 @@
-import Image from "next/image";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import {
+  Swords,
+  BarChart3,
+  History,
+  Target,
+  GithubIcon,
+  Star,
+} from "lucide-react";
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="flex flex-1 flex-col">
+      <section className="relative flex flex-col items-start pb-6 text-left md:items-center md:text-center md:py-16">
+        <div className="pointer-events-none absolute inset-0 hidden overflow-hidden md:block">
+          <div className="absolute left-0 top-0 flex flex-col gap-4 opacity-20">
+            {Array.from({ length: 10 }).map((_, row) => (
+              <div key={row} className="flex gap-4">
+                {Array.from({ length: 14 }).map((_, col) => (
+                  <div key={col} className="h-1 w-1 rounded-full bg-muted-foreground" />
+                ))}
+              </div>
+            ))}
+          </div>
+          <div className="absolute right-0 top-1/3 flex -translate-y-1/2 flex-col items-end gap-4 opacity-20">
+            {Array.from({ length: 10 }).map((_, row) => (
+              <div key={row} className="flex gap-4">
+                {Array.from({ length: 10 }).map((_, col) => (
+                  <div key={col} className="h-1 w-1 rounded-full bg-muted-foreground" />
+                ))}
+              </div>
+            ))}
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
+        <h1 className="text-4xl font-bold tracking-tight md:text-6xl">
+          Track Your{" "}
+          <span className="text-primary">Dead by Daylight</span>
+          <br />
+          Matches
+        </h1>
+
+        <p className="mt-6 md:mt-10 max-w-2xl text-lg text-muted-foreground md:text-xl">
+          Log your matches, analyze your performance as Killer or Survivor, and
+          track your progress over time with detailed statistics.
+        </p>
+
+        <div className="mt-6 md:mt-10 flex w-full flex-col items-center justify-center gap-4 md:w-auto md:flex-row">
+          <Button size="lg" className="h-15 w-full px-10 text-lg md:w-48" asChild>
+            <Link href="/auth/register">Sign Up</Link>
+          </Button>
+          <Button size="lg" variant="outline" className="h-15 w-full px-10 text-lg md:w-48" asChild>
+            <Link href="/matches">View Matches</Link>
+          </Button>
+        </div>
+      </section>
+
+      <section className="py-6 md:py-16">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="group rounded-lg border border-border bg-card p-6 hover:border-primary hover:bg-muted">
+            <Swords className="h-10 w-10 text-primary" />
+            <div className="mt-4 inline-block">
+              <h3 className="text-lg font-semibold">Match Logging</h3>
+              <div className="mt-2 h-0.5 w-12 bg-primary transition-all duration-200 group-hover:w-full" />
+            </div>
+            <p className="mt-3 text-sm text-muted-foreground">
+              Log every match with details like killer, map, perks, add-ons, and outcome.
+            </p>
+          </div>
+
+          <div className="group rounded-lg border border-border bg-card p-6 hover:border-primary hover:bg-muted">
+            <BarChart3 className="h-10 w-10 text-primary" />
+            <div className="mt-4 inline-block">
+              <h3 className="text-lg font-semibold">Performance Stats</h3>
+              <div className="mt-2 h-0.5 w-12 bg-primary transition-all duration-200 group-hover:w-full" />
+            </div>
+            <p className="mt-3 text-sm text-muted-foreground">
+              Analyze your win rates, kill rates, and escape rates with detailed charts and breakdowns.
+            </p>
+          </div>
+
+          <div className="group rounded-lg border border-border bg-card p-6 hover:border-primary hover:bg-muted">
+            <History className="h-10 w-10 text-primary" />
+            <div className="mt-4 inline-block">
+              <h3 className="text-lg font-semibold">Match History</h3>
+              <div className="mt-2 h-0.5 w-12 bg-primary transition-all duration-200 group-hover:w-full" />
+            </div>
+            <p className="mt-3 text-sm text-muted-foreground">
+              Browse your full match history with filters by killer, map, result, and date range.
+            </p>
+          </div>
+
+          <div className="group rounded-lg border border-border bg-card p-6 hover:border-primary hover:bg-muted">
+            <Target className="h-10 w-10 text-primary" />
+            <div className="mt-4 inline-block">
+              <h3 className="text-lg font-semibold">Killer & Survivor Tracking</h3>
+              <div className="mt-2 h-0.5 w-12 bg-primary transition-all duration-200 group-hover:w-full" />
+            </div>
+            <p className="mt-3 text-sm text-muted-foreground">
+              Track performance per killer and survivor, see which characters you perform best with.
+            </p>
+          </div>
+
+        </div>
+      </section>
+
+      <section className="flex flex-col items-center py-6 md:py-16 text-center">
+        <div className="flex items-center gap-3">
+          <GithubIcon className="h-10 w-10" />
+          <h2 className="text-3xl font-bold">Open Source</h2>
+        </div>
+        <p className="mt-6 max-w-xl text-muted-foreground">
+          DBD Matches is fully open source and free to use, licensed under the{" "}
           <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+            href="https://github.com/oagesus/dbdmatches/blob/main/LICENSE"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="whitespace-nowrap text-primary hover:underline"
+          >
+            MIT License
+          </a>{" "}
+          on{" "}
+          <a
+            href="https://github.com/oagesus/dbdmatches"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary hover:underline"
+          >
+            GitHub
+          </a>
+          .
+        </p>
+        <Button size="lg" className="mt-8 h-13 gap-2 bg-primary/10 px-8 text-base text-primary hover:bg-primary/20" asChild>
+          <a
+            href="https://github.com/oagesus/dbdmatches"
             target="_blank"
             rel="noopener noreferrer"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
+            <Star className="h-5 w-5" />
+            Star on GitHub
           </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+        </Button>
+        <a
+          href="https://github.com/oagesus/dbdmatches"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group mt-6 inline-flex flex-col items-center text-sm text-muted-foreground hover:text-primary"
+        >
+          Check out the source code
+          <div className="mt-4 h-0.5 w-12 bg-primary transition-all duration-200 group-hover:w-full" />
+        </a>
+      </section>
     </div>
   );
 }
