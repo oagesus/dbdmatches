@@ -1,19 +1,17 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
 # dependencies
-/node_modules
-/.pnp
+node_modules
+
+# next.js
+.next/
+out/
+.pnp
 .pnp.js
 
 # testing
-/coverage
-
-# next.js
-/.next/
-/out/
+coverage
 
 # production
-/build
+build
 
 # misc
 .DS_Store
@@ -34,3 +32,24 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# .NET
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.userprefs
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Bb]uild[Ll]og.*
+*.nupkg
+**/[Pp]ackages/*
+project.lock.json
+*.nuget.props
+*.nuget.targets
+
+compose.dbdmatches.yaml

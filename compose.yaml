@@ -1,0 +1,54 @@
+services:
+  db:
+    image: postgres:17
+    container_name: dbdmatches-db
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=devpassword
+      - POSTGRES_DB=dbdmatches_dev
+    ports:
+      - "5433:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  adminer:
+    image: adminer
+    container_name: dbdmatches-adminer
+    restart: always
+    ports:
+      - "8081:8080"
+    depends_on:
+      - db
+
+  api:
+    build:
+      context: ./dbdmatches-api
+    container_name: dbdmatches-api
+    restart: always
+    ports:
+      - "5100:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=dbdmatches_dev;Username=postgres;Password=devpassword
+    depends_on:
+      - db
+
+  web:
+    build:
+      context: ./dbdmatches-web
+      args:
+        - NEXT_PUBLIC_API_URL=http://localhost:5100
+    container_name: dbdmatches-web
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - API_URL=http://api:8080
+      - NEXT_PUBLIC_API_URL=http://localhost:5100
+    depends_on:
+      - api
+
+volumes:
+  db_data:
