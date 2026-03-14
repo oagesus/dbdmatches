@@ -4,7 +4,6 @@ import {
   Swords,
   BarChart3,
   History,
-  Target,
   GithubIcon,
   Star,
 } from "lucide-react";
@@ -41,8 +40,8 @@ export default function Home() {
         </h1>
 
         <p className="mt-6 md:mt-10 max-w-2xl text-lg text-muted-foreground md:text-xl">
-          Log your matches, analyze your performance as Killer or Survivor, and
-          track your progress over time with detailed statistics.
+          Automatically track your matches via Steam, analyze your performance
+          as Killer or Survivor, and watch your progress over time.
         </p>
 
         <div className="mt-6 md:mt-10 flex w-full flex-col items-center justify-center gap-4 md:w-auto md:flex-row">
@@ -60,11 +59,11 @@ export default function Home() {
           <div className="group rounded-lg border border-border bg-card p-6 hover:border-primary hover:bg-muted">
             <Swords className="h-10 w-10 text-primary" />
             <div className="mt-4 inline-block">
-              <h3 className="text-lg font-semibold">Match Logging</h3>
+              <h3 className="text-lg font-semibold">Automatic Tracking</h3>
               <div className="mt-2 h-0.5 w-12 bg-primary transition-all duration-200 group-hover:w-full" />
             </div>
             <p className="mt-3 text-sm text-muted-foreground">
-              Log every match with details like killer, map, perks, add-ons, and outcome.
+              Just link your Steam account. Matches are detected and recorded automatically.
             </p>
           </div>
 
@@ -86,18 +85,7 @@ export default function Home() {
               <div className="mt-2 h-0.5 w-12 bg-primary transition-all duration-200 group-hover:w-full" />
             </div>
             <p className="mt-3 text-sm text-muted-foreground">
-              Browse your full match history with filters by killer, map, result, and date range.
-            </p>
-          </div>
-
-          <div className="group rounded-lg border border-border bg-card p-6 hover:border-primary hover:bg-muted">
-            <Target className="h-10 w-10 text-primary" />
-            <div className="mt-4 inline-block">
-              <h3 className="text-lg font-semibold">Killer & Survivor Tracking</h3>
-              <div className="mt-2 h-0.5 w-12 bg-primary transition-all duration-200 group-hover:w-full" />
-            </div>
-            <p className="mt-3 text-sm text-muted-foreground">
-              Track performance per killer and survivor, see which characters you perform best with.
+              Browse your full match history with filters by killer, result, and date range.
             </p>
           </div>
 
@@ -117,7 +105,7 @@ export default function Home() {
             rel="noopener noreferrer"
             className="whitespace-nowrap text-primary hover:underline"
           >
-            MIT License
+            AGPL-3.0 License
           </a>{" "}
           on{" "}
           <a
