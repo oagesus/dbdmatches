@@ -7,6 +7,8 @@ interface User {
   steamId: string;
   displayName: string;
   avatarUrl: string | null;
+  status: "Offline" | "Online" | "InGame";
+  nextUpdateSeconds: number;
   createdAt: string;
 }
 

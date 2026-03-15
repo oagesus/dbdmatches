@@ -56,7 +56,9 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddHttpClient<SteamAuthService>();
+builder.Services.AddSingleton<SteamStatusCacheService>();
 builder.Services.AddHostedService<RefreshTokenCleanupBackgroundService>();
+builder.Services.AddHostedService<SteamStatusPollingBackgroundService>();
 
 builder.Services.AddControllers(options =>
 {

@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Swords, BarChart3, History, Settings, LogOut } from "lucide-react";
+import { formatNextUpdate, statusLabel, statusColor } from "@/lib/status-utils";
+import { useStatusCountdown } from "@/lib/use-countdown";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -16,9 +18,17 @@ import {
 import { ThemeToggleIcon } from "@/components/theme-toggle-icon";
 import type { User } from "@/lib/auth/get-user";
 
-export function MobileMenuAuth({ user }: { user: User }) {
+export function MobileMenuAuth({ user: initialUser }: { user: User }) {
   const router = useRouter();
+  const [user, setUser] = useState(initialUser);
   const [isOpen, setIsOpen] = useState(false);
+  const { seconds, updatedUser, isUpdating } = useStatusCountdown(user.nextUpdateSeconds);
+
+  useEffect(() => {
+    if (updatedUser) {
+      setUser(updatedUser as unknown as User);
+    }
+  }, [updatedUser]);
 
   async function handleLogout() {
     await fetch("/api/auth/logout", {
@@ -52,10 +62,13 @@ export function MobileMenuAuth({ user }: { user: User }) {
           <span className="sr-only">Menu</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-48">
+      <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel className="font-normal">
           <p className="text-sm font-medium">{user.displayName}</p>
-          <p className="text-xs text-muted-foreground">Steam ID: {user.steamId}</p>
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <span className={`h-2 w-2 rounded-full ${statusColor(user.status)}`} />
+            {statusLabel(user.status)} · {isUpdating ? "updating..." : `updates in ${formatNextUpdate(seconds)}`}
+          </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem

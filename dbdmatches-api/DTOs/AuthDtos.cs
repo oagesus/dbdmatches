@@ -5,6 +5,8 @@ public record UserResponse(
     string SteamId,
     string DisplayName,
     string? AvatarUrl,
+    string Status,
+    int NextUpdateSeconds,
     DateTimeOffset CreatedAt
 );
 

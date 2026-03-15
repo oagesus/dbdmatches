@@ -14,6 +14,7 @@ public class AuthController(
     AppDbContext db,
     JwtService jwtService,
     SteamAuthService steamAuthService,
+    SteamStatusCacheService statusCache,
     IConfiguration configuration) : ControllerBase
 {
     [HttpGet("steam/login")]
@@ -64,6 +65,10 @@ public class AuthController(
             user.AvatarUrl = playerSummary.AvatarFull;
             await db.SaveChangesAsync();
         }
+
+        var statuses = await steamAuthService.GetBulkPlayerStatuses([steamId]);
+        if (statuses.TryGetValue(steamId, out var status))
+            statusCache.Set(steamId, status);
 
         if (user.IsBlocked)
             return Redirect($"{frontendUrl}/auth/login?error=account_blocked");
@@ -176,11 +181,24 @@ public class AuthController(
         if (user == null)
             return NotFound();
 
+        var entry = statusCache.Get(user.SteamId);
+        var interval = entry.Status switch
+        {
+            SteamStatus.InGame => TimeSpan.FromMinutes(2),
+            SteamStatus.Online => TimeSpan.FromMinutes(5),
+            _ => TimeSpan.FromMinutes(10)
+        };
+        var elapsed = DateTimeOffset.UtcNow - entry.UpdatedAt;
+        var remaining = (int)(interval - elapsed).TotalSeconds;
+        var nextUpdateSeconds = remaining > 0 ? remaining : (int)interval.TotalSeconds;
+
         return Ok(new UserResponse(
             user.PublicId,
             user.SteamId,
             user.DisplayName,
             user.AvatarUrl,
+            entry.Status.ToString(),
+            nextUpdateSeconds,
             user.CreatedAt
         ));
     }
