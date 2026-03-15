@@ -87,7 +87,7 @@ export function UserMenu({ user: initialUser }: { user: User }) {
           onClick={handleLogout}
           className="cursor-pointer focus:bg-destructive/10 focus:text-destructive"
         >
-          <LogOut className="mr-2 h-4 w-4" />
+          <LogOut className="mr-2 h-4 w-4 text-destructive!" />
           Sign Out
         </DropdownMenuItem>
         <DropdownMenuSeparator />
