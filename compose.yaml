@@ -8,7 +8,7 @@ services:
       - POSTGRES_PASSWORD=devpassword
       - POSTGRES_DB=dbdmatches_dev
     ports:
-      - "5433:5432"
+      - "5434:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
 
@@ -32,6 +32,10 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
       - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=dbdmatches_dev;Username=postgres;Password=devpassword
+      - Jwt__Secret=${JWT_SECRET}
+      - Steam__ApiKey=${STEAM_API_KEY}
+      - Frontend__Url=http://localhost:3000
+      - Api__Url=http://localhost:5100
     depends_on:
       - db
 

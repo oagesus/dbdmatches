@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
+import { AuthGuardian } from "@/components/auth-guardian";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -40,6 +41,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <AuthGuardian />
           <Navbar />
           <div className="flex flex-1 flex-col px-6 pt-12 pb-20">
             <div className="mx-auto flex w-full max-w-screen-xl flex-1 flex-col">

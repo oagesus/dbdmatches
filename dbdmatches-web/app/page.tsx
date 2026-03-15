@@ -7,6 +7,7 @@ import {
   GithubIcon,
   Star,
 } from "lucide-react";
+import { SteamIcon } from "@/components/icons/steam-icon";
 
 export default function Home() {
   return (
@@ -46,7 +47,7 @@ export default function Home() {
 
         <div className="mt-6 md:mt-10 flex w-full flex-col items-center justify-center gap-4 md:w-auto md:flex-row">
           <Button size="lg" className="h-15 w-full px-10 text-lg md:w-48" asChild>
-            <Link href="/auth/register">Sign Up</Link>
+            <a href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5100"}/api/auth/steam/login`}><SteamIcon className="h-5 w-5" />Get Started</a>
           </Button>
           <Button size="lg" variant="outline" className="h-15 w-full px-10 text-lg md:w-48" asChild>
             <Link href="/matches">View Matches</Link>
@@ -56,7 +57,7 @@ export default function Home() {
 
       <section className="py-6 md:py-16">
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <div className="group rounded-lg border border-border bg-card p-6 hover:border-primary hover:bg-muted">
+          <div className="group rounded-lg border border-border bg-card p-6 hover:border-primary hover:bg-primary/10">
             <Swords className="h-10 w-10 text-primary" />
             <div className="mt-4 inline-block">
               <h3 className="text-lg font-semibold">Automatic Tracking</h3>
@@ -67,7 +68,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="group rounded-lg border border-border bg-card p-6 hover:border-primary hover:bg-muted">
+          <div className="group rounded-lg border border-border bg-card p-6 hover:border-primary hover:bg-primary/10">
             <BarChart3 className="h-10 w-10 text-primary" />
             <div className="mt-4 inline-block">
               <h3 className="text-lg font-semibold">Performance Stats</h3>
@@ -78,7 +79,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="group rounded-lg border border-border bg-card p-6 hover:border-primary hover:bg-muted">
+          <div className="group rounded-lg border border-border bg-card p-6 hover:border-primary hover:bg-primary/10">
             <History className="h-10 w-10 text-primary" />
             <div className="mt-4 inline-block">
               <h3 className="text-lg font-semibold">Match History</h3>

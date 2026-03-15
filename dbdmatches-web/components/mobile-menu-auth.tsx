@@ -2,22 +2,31 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Swords, BarChart3, History } from "lucide-react";
+import { Swords, BarChart3, History, Settings, LogOut } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ThemeToggleIcon } from "@/components/theme-toggle-icon";
-import { SteamIcon } from "@/components/icons/steam-icon";
+import type { User } from "@/lib/auth/get-user";
 
-export function MobileMenu() {
+export function MobileMenuAuth({ user }: { user: User }) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
+
+  async function handleLogout() {
+    await fetch("/api/auth/logout", {
+      method: "POST",
+      credentials: "include",
+    });
+    window.location.href = "/auth/clear";
+  }
 
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
@@ -44,6 +53,11 @@ export function MobileMenu() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
+        <DropdownMenuLabel className="font-normal">
+          <p className="text-sm font-medium">{user.displayName}</p>
+          <p className="text-xs text-muted-foreground">Steam ID: {user.steamId}</p>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={() => router.push("/matches")}
           className="cursor-pointer"
@@ -66,13 +80,20 @@ export function MobileMenu() {
           History
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <div
-          onClick={() => window.location.href = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5100"}/api/auth/steam/login`}
-          className="flex items-center justify-center py-1.5 rounded-sm cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90 active:bg-primary/90"
+        <DropdownMenuItem
+          onClick={() => router.push("/account")}
+          className="cursor-pointer"
         >
-          <SteamIcon className="h-4 w-4 mr-1.5" />
-          <span className="text-sm">Sign In</span>
-        </div>
+          <Settings className="mr-2 h-4 w-4" />
+          Settings
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={handleLogout}
+          className="cursor-pointer focus:bg-destructive/10 focus:text-destructive"
+        >
+          <LogOut className="mr-2 h-4 w-4" />
+          Sign Out
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <div className="flex items-center justify-center">
           <ThemeToggleIcon />
