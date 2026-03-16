@@ -1,0 +1,464 @@
+"use client";
+
+import { useEffect, useState, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Clock, Loader2, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
+
+interface KillerMatchDetails {
+  killerName: string;
+  sacrifices: number;
+  kills: number;
+  powerStat1: number;
+  powerStat1Label: string;
+  powerStat2: number;
+  powerStat2Label: string | null;
+  powerStat3: number;
+  powerStat3Label: string | null;
+}
+
+interface SurvivorMatchDetails {
+  escaped: boolean;
+  hatchEscape: boolean;
+  generatorsCompleted: number;
+}
+
+interface MatchHistoryItem {
+  publicId: string;
+  role: "killer" | "survivor";
+  result: "Win" | "Loss" | "Draw";
+  playedAt: string;
+  bloodpointsEarned: number;
+  killer: KillerMatchDetails | null;
+  survivor: SurvivorMatchDetails | null;
+}
+
+interface HistoryClientProps {
+  initialMatches: MatchHistoryItem[];
+  initialTotalCount: number;
+  initialTotalPages: number;
+  initialPlayedKillers: string[];
+  initialRole: string;
+  initialKiller: string;
+  initialPage: number;
+  initialPageSize: number;
+}
+
+function getPageRange(currentPage: number, totalPages: number): number[] {
+  const windowSize = Math.min(5, totalPages);
+
+  let start = currentPage - Math.floor(windowSize / 2);
+  start = Math.max(1, start);
+  start = Math.min(start, totalPages - windowSize + 1);
+
+  return Array.from({ length: windowSize }, (_, i) => start + i);
+}
+
+function formatTimeAgo(dateString: string): string {
+  const date = new Date(dateString);
+  const now = new Date();
+  const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+  if (seconds < 60) return "just now";
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+
+  return date.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: date.getFullYear() !== now.getFullYear() ? "numeric" : undefined,
+  });
+}
+
+function formatBP(bp: number): string {
+  return bp.toLocaleString();
+}
+
+function ResultBadge({ result }: { result: string }) {
+  const colors: Record<string, string> = {
+    Win: "bg-green-500/15 text-green-700 dark:text-green-400",
+    Loss: "bg-red-500/15 text-red-700 dark:text-red-400",
+    Draw: "bg-yellow-500/15 text-yellow-700 dark:text-yellow-400",
+  };
+
+  return (
+    <Badge className={`${colors[result] || ""} border-transparent`}>
+      {result}
+    </Badge>
+  );
+}
+
+function RoleLabel({ role, killerName }: { role: string; killerName?: string }) {
+  return (
+    <span className="text-sm font-medium">
+      {role === "killer" ? killerName || "Killer" : "Survivor"}
+    </span>
+  );
+}
+
+function MatchCard({ match }: { match: MatchHistoryItem }) {
+  const resultColors: Record<string, string> = {
+    Win: "border-green-500/40 bg-green-500/5 hover:border-green-500 hover:bg-green-500/10",
+    Loss: "border-red-500/40 bg-red-500/5 hover:border-red-500 hover:bg-red-500/10",
+    Draw: "border-yellow-500/40 bg-yellow-500/5 hover:border-yellow-500 hover:bg-yellow-500/10",
+  };
+
+  return (
+    <div className={`group rounded-lg border p-4 ${resultColors[match.result] || "border-border bg-card"}`}>
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <RoleLabel role={match.role} killerName={match.killer?.killerName} />
+            <ResultBadge result={match.result} />
+          </div>
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground shrink-0">
+            <Clock className="h-3 w-3" />
+            {formatTimeAgo(match.playedAt)}
+          </div>
+        </div>
+
+        <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
+          {match.role === "killer" && match.killer && (
+            <>
+              <span>
+                Kills: <span className="text-foreground font-medium">{match.killer.sacrifices + match.killer.kills}</span>
+              </span>
+              {match.killer.powerStat1 > 0 && (
+                <span>
+                  {match.killer.powerStat1Label}: <span className="text-foreground font-medium">{match.killer.powerStat1}</span>
+                </span>
+              )}
+              {match.killer.powerStat2Label && match.killer.powerStat2 > 0 && (
+                <span>
+                  {match.killer.powerStat2Label}: <span className="text-foreground font-medium">{match.killer.powerStat2}</span>
+                </span>
+              )}
+              {match.killer.powerStat3Label && match.killer.powerStat3 > 0 && (
+                <span>
+                  {match.killer.powerStat3Label}: <span className="text-foreground font-medium">{match.killer.powerStat3}</span>
+                </span>
+              )}
+            </>
+          )}
+
+          {match.role === "survivor" && match.survivor && (
+            <>
+              <span>
+                Gate Escape: <span className="text-foreground font-medium">{match.survivor.escaped && !match.survivor.hatchEscape ? "Yes" : "No"}</span>
+              </span>
+              <span>
+                Hatch Escape: <span className="text-foreground font-medium">{match.survivor.hatchEscape ? "Yes" : "No"}</span>
+              </span>
+              <span>
+                Generators: <span className="text-foreground font-medium">{match.survivor.generatorsCompleted.toFixed(1)}</span>
+              </span>
+            </>
+          )}
+
+          <span>
+            BP: <span className="text-foreground font-medium">{formatBP(match.bloodpointsEarned)}</span>
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+export function HistoryClient({
+  initialMatches,
+  initialTotalCount,
+  initialTotalPages,
+  initialPlayedKillers,
+  initialRole,
+  initialKiller,
+  initialPage,
+  initialPageSize,
+}: HistoryClientProps) {
+  const router = useRouter();
+  const [matches, setMatches] = useState<MatchHistoryItem[]>(initialMatches);
+  const [totalPages, setTotalPages] = useState(initialTotalPages);
+  const [totalCount, setTotalCount] = useState(initialTotalCount);
+  const [playedKillers, setPlayedKillers] = useState<string[]>(initialPlayedKillers);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const currentRole = initialRole;
+  const currentKiller = initialKiller;
+  const currentPage = initialPage;
+  const currentPageSize = initialPageSize;
+
+  const hasSSRData = useRef(true);
+
+  useEffect(() => {
+    const now = new Date();
+    const msUntilNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
+
+    let interval: NodeJS.Timeout;
+    const timeout = setTimeout(() => {
+      setRefreshKey((k) => k + 1);
+      interval = setInterval(() => {
+        setRefreshKey((k) => k + 1);
+      }, 60 * 1000);
+    }, msUntilNextMinute);
+
+    return () => {
+      clearTimeout(timeout);
+      clearInterval(interval);
+    };
+  }, []);
+
+  const buildUrl = (role: string, page: number, pageSize: number, killer?: string) => {
+    const params = new URLSearchParams();
+    if (role !== "all") params.set("role", role);
+    if (killer) params.set("killer", killer);
+    if (page > 1) params.set("page", page.toString());
+    if (pageSize !== 20) params.set("pageSize", pageSize.toString());
+    const query = params.toString();
+    return query ? `/history?${query}` : "/history";
+  };
+
+  const setRole = (newRole: string) => {
+    router.push(buildUrl(newRole, 1, currentPageSize));
+  };
+
+  const setPage = (newPage: number) => {
+    router.push(buildUrl(currentRole, newPage, currentPageSize, currentKiller));
+  };
+
+  const setPageSize = (newSize: number) => {
+    router.push(buildUrl(currentRole, 1, newSize, currentKiller));
+  };
+
+  const setKiller = (newKiller: string) => {
+    router.push(buildUrl(currentRole, 1, currentPageSize, newKiller || undefined));
+  };
+
+  useEffect(() => {
+    setMatches(initialMatches);
+    setTotalCount(initialTotalCount);
+    setTotalPages(initialTotalPages);
+    setPlayedKillers(initialPlayedKillers);
+  }, [initialMatches, initialTotalCount, initialTotalPages, initialPlayedKillers]);
+
+  useEffect(() => {
+    if (hasSSRData.current && refreshKey === 0) {
+      hasSSRData.current = false;
+      return;
+    }
+
+    async function fetchHistory() {
+      setError(null);
+
+      try {
+        let url = `/api/matches/history?role=${currentRole}&page=${currentPage}&pageSize=${currentPageSize}`;
+        if (currentKiller && currentRole === "killer") {
+          url += `&killer=${encodeURIComponent(currentKiller)}`;
+        }
+        const res = await fetch(url);
+        if (!res.ok) {
+          setError("Failed to load match history");
+          return;
+        }
+        const data = await res.json();
+        setMatches(data.matches);
+        setTotalPages(data.totalPages);
+        setTotalCount(data.totalCount);
+      } catch {
+        setError("Failed to load match history");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchHistory();
+  }, [currentRole, currentKiller, currentPage, currentPageSize, refreshKey]);
+
+  // Fetch killers list client-side on refresh (in case new killers were played)
+  useEffect(() => {
+    if (refreshKey === 0) return;
+    async function fetchKillers() {
+      try {
+        const res = await fetch("/api/matches/killers");
+        if (res.ok) {
+          const data: string[] = await res.json();
+          setPlayedKillers(data);
+        }
+      } catch { /* ignore */ }
+    }
+    fetchKillers();
+  }, [refreshKey]);
+
+  const validPage = Math.min(Math.max(1, currentPage), totalPages || 1);
+
+  return (
+    <div className="flex flex-1 flex-col gap-6">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Match History</h1>
+      </div>
+
+      <Tabs value={currentRole} onValueChange={setRole}>
+        <TabsList>
+          <TabsTrigger value="all" className="cursor-pointer data-[state=active]:bg-primary data-[state=active]:text-primary-foreground dark:data-[state=active]:bg-primary dark:data-[state=active]:text-primary-foreground dark:data-[state=active]:border-primary">All</TabsTrigger>
+          <TabsTrigger value="killer" className="cursor-pointer data-[state=active]:bg-primary data-[state=active]:text-primary-foreground dark:data-[state=active]:bg-primary dark:data-[state=active]:text-primary-foreground dark:data-[state=active]:border-primary">Killer</TabsTrigger>
+          <TabsTrigger value="survivor" className="cursor-pointer data-[state=active]:bg-primary data-[state=active]:text-primary-foreground dark:data-[state=active]:bg-primary dark:data-[state=active]:text-primary-foreground dark:data-[state=active]:border-primary">Survivor</TabsTrigger>
+        </TabsList>
+
+        <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+            <span className="text-xs text-muted-foreground">
+              {totalCount} matches
+            </span>
+            {currentRole === "killer" && playedKillers.length > 0 && (
+              <Select value={currentKiller || "all"} onValueChange={(v) => setKiller(v === "all" ? "" : v)}>
+                <SelectTrigger className="h-7 w-[180px] text-xs cursor-pointer">
+                  <SelectValue placeholder="All Killers" />
+                </SelectTrigger>
+                <SelectContent position="popper" side="bottom" align="start">
+                  <SelectItem value="all" className="cursor-pointer text-xs">All Killers</SelectItem>
+                  {playedKillers.map((k) => (
+                    <SelectItem key={k} value={k} className="cursor-pointer text-xs">{k}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+          <Select value={currentPageSize.toString()} onValueChange={(v) => setPageSize(Number(v))}>
+            <SelectTrigger className="h-7 w-[100px] text-xs cursor-pointer">
+              <SelectValue>{currentPageSize} / page</SelectValue>
+            </SelectTrigger>
+            <SelectContent position="popper" side="bottom" align="end">
+              <SelectItem value="20" className="cursor-pointer text-xs">20 / page</SelectItem>
+              <SelectItem value="50" className="cursor-pointer text-xs">50 / page</SelectItem>
+              <SelectItem value="100" className="cursor-pointer text-xs">100 / page</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <TabsContent value={currentRole}>
+          {loading && (
+            <div className="flex items-center justify-center py-16">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          )}
+
+          {error && (
+            <div className="flex items-center justify-center py-16">
+              <p className="text-sm text-destructive">{error}</p>
+            </div>
+          )}
+
+          {!loading && !error && matches.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <p className="text-muted-foreground">No matches found.</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Play some games and they will appear here.
+              </p>
+            </div>
+          )}
+
+          {!loading && !error && matches.length > 0 && (
+            <>
+              <div className="grid gap-3">
+                {matches.map((match) => (
+                  <MatchCard key={match.publicId} match={match} />
+                ))}
+              </div>
+
+              {totalPages > 1 && (
+                <div className="flex flex-col gap-1 pt-6">
+                  <div className="flex items-center justify-between md:justify-center md:gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="hidden md:inline-flex h-8 w-8 cursor-pointer"
+                      onClick={() => setPage(1)}
+                      disabled={validPage === 1}
+                    >
+                      <ChevronsLeft className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 cursor-pointer"
+                      onClick={() => setPage(validPage - 1)}
+                      disabled={validPage === 1}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+
+                    {getPageRange(validPage, totalPages).map((pageNum) => (
+                      <Button
+                        key={pageNum}
+                        variant={pageNum === validPage ? "default" : "ghost"}
+                        size="icon"
+                        className="h-8 w-8 text-xs cursor-pointer"
+                        onClick={() => setPage(pageNum)}
+                      >
+                        {pageNum}
+                      </Button>
+                    ))}
+
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 cursor-pointer"
+                      onClick={() => setPage(validPage + 1)}
+                      disabled={validPage === totalPages}
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="hidden md:inline-flex h-8 w-8 cursor-pointer"
+                      onClick={() => setPage(totalPages)}
+                      disabled={validPage === totalPages}
+                    >
+                      <ChevronsRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="flex items-center justify-between md:hidden">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 gap-1 pl-0 text-xs text-muted-foreground cursor-pointer"
+                      onClick={() => setPage(1)}
+                      disabled={validPage === 1}
+                    >
+                      <ChevronsLeft className="h-3.5 w-3.5" />
+                      First
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 gap-1 pr-0 text-xs text-muted-foreground cursor-pointer"
+                      onClick={() => setPage(totalPages)}
+                      disabled={validPage === totalPages}
+                    >
+                      Last
+                      <ChevronsRight className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                  <div className="flex justify-center pt-1">
+                    <span className="text-xs text-muted-foreground">
+                      Page {validPage} of {totalPages}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}

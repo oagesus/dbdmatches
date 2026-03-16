@@ -21,8 +21,14 @@ export function useStatusCountdown(initialSeconds: number) {
         setStatus(data);
         endTimeRef.current = Date.now() + data.nextUpdateSeconds * 1000;
         setSeconds(data.nextUpdateSeconds);
+      } else {
+        endTimeRef.current = Date.now() + 60 * 1000;
+        setSeconds(60);
       }
-    } catch {} finally {
+    } catch {
+      endTimeRef.current = Date.now() + 60 * 1000;
+      setSeconds(60);
+    } finally {
       isFetchingRef.current = false;
       setIsUpdating(false);
     }

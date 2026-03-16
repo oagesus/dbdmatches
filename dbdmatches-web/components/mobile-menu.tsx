@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Swords, BarChart3, History } from "lucide-react";
+import { History } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -44,20 +44,6 @@ export function MobileMenu() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
-        <DropdownMenuItem
-          onClick={() => router.push("/matches")}
-          className="cursor-pointer"
-        >
-          <Swords className="mr-2 h-4 w-4" />
-          Matches
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => router.push("/stats")}
-          className="cursor-pointer"
-        >
-          <BarChart3 className="mr-2 h-4 w-4" />
-          Statistics
-        </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => router.push("/history")}
           className="cursor-pointer"

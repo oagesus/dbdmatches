@@ -8,6 +8,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<User> Users => Set<User>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<UserSession> UserSessions => Set<UserSession>();
+    public DbSet<MatchSurvivor> MatchSurvivors => Set<MatchSurvivor>();
+    public DbSet<MatchKiller> MatchKillers => Set<MatchKiller>();
+    public DbSet<PlayerStatsSnapshot> PlayerStatsSnapshots => Set<PlayerStatsSnapshot>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -52,6 +55,48 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
             entity.HasOne(e => e.User)
                 .WithMany(e => e.Sessions)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<MatchSurvivor>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.PublicId).IsUnique();
+            entity.Property(e => e.PublicId).HasDefaultValueSql("gen_random_uuid()");
+            entity.Property(e => e.PlayedAt).HasDefaultValueSql("now()");
+            entity.Property(e => e.Result).HasConversion<string>().HasMaxLength(10);
+
+            entity.HasOne(e => e.User)
+                .WithMany(e => e.SurvivorMatches)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<MatchKiller>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.PublicId).IsUnique();
+            entity.Property(e => e.PublicId).HasDefaultValueSql("gen_random_uuid()");
+            entity.Property(e => e.Killer).HasMaxLength(50);
+            entity.Property(e => e.PlayedAt).HasDefaultValueSql("now()");
+            entity.Property(e => e.Result).HasConversion<string>().HasMaxLength(10);
+
+            entity.HasOne(e => e.User)
+                .WithMany(e => e.KillerMatches)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<PlayerStatsSnapshot>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => new { e.UserId, e.StatName }).IsUnique();
+            entity.Property(e => e.StatName).HasMaxLength(100);
+            entity.Property(e => e.FetchedAt).HasDefaultValueSql("now()");
+
+            entity.HasOne(e => e.User)
+                .WithMany(e => e.StatsSnapshots)
                 .HasForeignKey(e => e.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
         });

@@ -12,4 +12,7 @@ public class User
 
     public List<RefreshToken> RefreshTokens { get; set; } = [];
     public List<UserSession> Sessions { get; set; } = [];
+    public List<MatchSurvivor> SurvivorMatches { get; set; } = [];
+    public List<MatchKiller> KillerMatches { get; set; } = [];
+    public List<PlayerStatsSnapshot> StatsSnapshots { get; set; } = [];
 }

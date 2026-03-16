@@ -182,12 +182,7 @@ public class AuthController(
             return NotFound();
 
         var entry = statusCache.Get(user.SteamId);
-        var interval = entry.Status switch
-        {
-            SteamStatus.InGame => TimeSpan.FromMinutes(2),
-            SteamStatus.Online => TimeSpan.FromMinutes(5),
-            _ => TimeSpan.FromMinutes(10)
-        };
+        var interval = statusCache.GetInterval(entry.Status);
         var elapsed = DateTimeOffset.UtcNow - entry.UpdatedAt;
         var remaining = (int)(interval - elapsed).TotalSeconds;
         var nextUpdateSeconds = remaining > 0 ? remaining : (int)interval.TotalSeconds;

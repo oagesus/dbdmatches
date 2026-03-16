@@ -3,6 +3,7 @@ using System;
 using DbdMatches.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DbdMatches.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260316124445_AddMatchTracking")]
+    partial class AddMatchTracking
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -58,10 +61,6 @@ namespace DbdMatches.Api.Migrations
                     b.Property<int>("PowerStat2")
                         .HasColumnType("integer")
                         .HasColumnName("power_stat2");
-
-                    b.Property<int>("PowerStat3")
-                        .HasColumnType("integer")
-                        .HasColumnName("power_stat3");
 
                     b.Property<Guid>("PublicId")
                         .ValueGeneratedOnAdd()

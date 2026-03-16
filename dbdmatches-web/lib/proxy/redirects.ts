@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const PROTECTED_ROUTES = ["/dashboard", "/account"];
+const PROTECTED_ROUTES = ["/dashboard", "/account", "/history"];
 
 export function handleAuthRedirects(
   request: NextRequest,

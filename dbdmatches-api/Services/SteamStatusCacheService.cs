@@ -7,7 +7,18 @@ public record SteamStatusEntry(SteamStatus Status, DateTimeOffset UpdatedAt);
 
 public class SteamStatusCacheService
 {
+    public static readonly TimeSpan InGamePollingInterval = TimeSpan.FromMinutes(2);
+    public static readonly TimeSpan OnlinePollingInterval = TimeSpan.FromMinutes(5);
+    public static readonly TimeSpan OfflinePollingInterval = TimeSpan.FromMinutes(2); // TODO: Set back to 10 for production
+
     private readonly ConcurrentDictionary<string, SteamStatusEntry> _statusCache = new();
+
+    public TimeSpan GetInterval(SteamStatus status) => status switch
+    {
+        SteamStatus.InGame => InGamePollingInterval,
+        SteamStatus.Online => OnlinePollingInterval,
+        _ => OfflinePollingInterval
+    };
 
     public void Set(string steamId, SteamStatus status)
     {

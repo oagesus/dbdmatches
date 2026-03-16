@@ -23,10 +23,7 @@ export async function Navbar() {
           {user ? (
             <>
               <Button variant="ghost" asChild className="hidden lg:inline-flex">
-                <Link href="/matches">Matches</Link>
-              </Button>
-              <Button variant="ghost" asChild className="hidden lg:inline-flex">
-                <Link href="/stats">Statistics</Link>
+                <Link href="/dashboard">Dashboard</Link>
               </Button>
               <Button variant="ghost" asChild className="hidden lg:inline-flex">
                 <Link href="/history">History</Link>
@@ -40,12 +37,6 @@ export async function Navbar() {
             </>
           ) : (
             <>
-              <Button variant="ghost" asChild className="hidden lg:inline-flex">
-                <Link href="/matches">Matches</Link>
-              </Button>
-              <Button variant="ghost" asChild className="hidden lg:inline-flex">
-                <Link href="/stats">Statistics</Link>
-              </Button>
               <Button variant="ghost" asChild className="hidden lg:inline-flex">
                 <Link href="/history">History</Link>
               </Button>

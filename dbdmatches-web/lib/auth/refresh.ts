@@ -8,7 +8,7 @@ function isTokenExpired(request: NextRequest): boolean {
 
   try {
     const payload = JSON.parse(atob(accessToken.split(".")[1]));
-    return payload.exp * 1000 < Date.now();
+    return Date.now() >= payload.exp * 1000 - 10000;
   } catch {
     return true;
   }
@@ -36,25 +36,41 @@ export async function handleTokenRefresh(
     });
 
     if (!res.ok) {
-      return { response: null, isAuthenticated: false };
+      const response = NextResponse.next();
+      response.cookies.delete("access_token");
+      response.cookies.delete("refresh_token");
+      response.cookies.delete("token_exp");
+      return { response, isAuthenticated: false };
     }
 
     const response = NextResponse.next();
 
     const setCookieHeaders = res.headers.getSetCookie();
     for (const cookie of setCookieHeaders) {
-      const [nameValue, ...parts] = cookie.split(";");
-      const [name, value] = nameValue.split("=");
-      const isHttpOnly = parts.some((p) => p.trim().toLowerCase() === "httponly");
+      const [cookiePart] = cookie.split(";");
+      const [name, value] = cookiePart.split("=");
 
-      response.cookies.set({
-        name: name.trim(),
-        value: value.trim(),
-        httpOnly: isHttpOnly,
-        sameSite: "lax",
-        path: "/",
-        secure: process.env.NODE_ENV === "production",
-      });
+      if (name === "access_token" || name === "refresh_token") {
+        response.cookies.set({
+          name,
+          value: decodeURIComponent(value),
+          httpOnly: true,
+          sameSite: "lax",
+          path: "/",
+          maxAge: name === "access_token" ? 300 : 2592000,
+        });
+      }
+
+      if (name === "token_exp") {
+        response.cookies.set({
+          name,
+          value: decodeURIComponent(value),
+          httpOnly: false,
+          sameSite: "lax",
+          path: "/",
+          maxAge: 2592000,
+        });
+      }
     }
 
     return { response, isAuthenticated: true };
