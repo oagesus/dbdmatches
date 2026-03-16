@@ -12,6 +12,10 @@ export function handleAuthRedirects(
   if (pathname === "/auth/clear") return null;
 
 
+  if (pathname === "/" && isAuthenticated) {
+    return NextResponse.redirect(new URL("/dashboard", request.url));
+  }
+
   if (!isAuthenticated && PROTECTED_ROUTES.some((route) => pathname.startsWith(route))) {
     return NextResponse.redirect(new URL("/", request.url));
   }
