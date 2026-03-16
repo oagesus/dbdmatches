@@ -5,7 +5,7 @@ export function Footer() {
     <footer className="bg-muted dark:bg-black/30 px-6">
       <div className="mx-auto flex w-full max-w-screen-xl flex-col-reverse items-center gap-3 py-4 md:flex-row md:justify-between">
         <span className="text-xs text-muted-foreground">
-          &copy; {new Date().getFullYear()} DBD Matches
+          &copy; {new Date().getFullYear()} DBDMatches
         </span>
         <nav className="flex flex-wrap justify-center gap-x-6 gap-y-2">
           <Link href="/privacy-policy" className="text-xs text-muted-foreground hover:text-foreground hover:underline">

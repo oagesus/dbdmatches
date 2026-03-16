@@ -99,7 +99,7 @@ export default function Home() {
           <h2 className="text-3xl font-bold">Open Source</h2>
         </div>
         <p className="mt-6 max-w-xl text-muted-foreground">
-          DBD Matches is fully open source and free to use, licensed under the{" "}
+          DBDMatches is fully open source and free to use, licensed under the{" "}
           <a
             href="https://github.com/oagesus/dbdmatches/blob/main/LICENSE"
             target="_blank"

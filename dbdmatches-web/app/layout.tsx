@@ -18,8 +18,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "DBD Matches - Dead by Daylight Match Tracker",
-    template: "%s | DBD Matches",
+    default: "DBDMatches - Dead by Daylight Match Tracker",
+    template: "%s | DBDMatches",
   },
   description:
     "Track your Dead by Daylight matches, analyze your performance, and improve your gameplay with detailed match statistics.",
