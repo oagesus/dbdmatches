@@ -17,7 +17,7 @@ export async function Navbar() {
           href={user ? "/dashboard" : "/"}
           className="flex items-center gap-3 text-2xl font-light"
         >
-          DBD Matches
+          <span><span className="text-primary">DBD</span>Matches</span>
         </Link>
         <div className="flex items-center gap-2">
           {user ? (

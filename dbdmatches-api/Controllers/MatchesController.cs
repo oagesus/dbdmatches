@@ -13,11 +13,19 @@ public class MatchesController(AppDbContext db) : ControllerBase
 {
     [Authorize]
     [HttpGet("history")]
-    public async Task<IActionResult> GetHistory([FromQuery] string role = "all", [FromQuery] string? killer = null, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+    public async Task<IActionResult> GetHistory([FromQuery] string role = "all", [FromQuery] string? killer = null, [FromQuery] int page = 1, [FromQuery] int pageSize = 20, [FromQuery] string? period = null)
     {
         if (page < 1) page = 1;
         if (pageSize < 1) pageSize = 20;
         if (pageSize > 100) pageSize = 100;
+
+        DateTimeOffset? since = period switch
+        {
+            "30d" => DateTimeOffset.UtcNow.AddDays(-30),
+            "90d" => DateTimeOffset.UtcNow.AddDays(-90),
+            "1y" => DateTimeOffset.UtcNow.AddYears(-1),
+            _ => null
+        };
         var publicIdClaim = User.FindFirst("sub")?.Value
             ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
 
@@ -37,6 +45,9 @@ public class MatchesController(AppDbContext db) : ControllerBase
 
             if (!string.IsNullOrEmpty(killer))
                 killerQuery = killerQuery.Where(m => m.Killer == killer);
+
+            if (since.HasValue)
+                killerQuery = killerQuery.Where(m => m.PlayedAt >= since.Value);
 
             var killerMatches = await killerQuery
                 .OrderByDescending(m => m.PlayedAt)
@@ -70,8 +81,13 @@ public class MatchesController(AppDbContext db) : ControllerBase
 
         if (role is "all" or "survivor")
         {
-            var survivorMatches = await db.MatchSurvivors
-                .Where(m => m.UserId == user.Id)
+            var survivorQuery = db.MatchSurvivors
+                .Where(m => m.UserId == user.Id);
+
+            if (since.HasValue)
+                survivorQuery = survivorQuery.Where(m => m.PlayedAt >= since.Value);
+
+            var survivorMatches = await survivorQuery
                 .OrderByDescending(m => m.PlayedAt)
                 .ToListAsync();
 
@@ -106,5 +122,39 @@ public class MatchesController(AppDbContext db) : ControllerBase
     {
         var killers = KillerMappingService.GetAllKillerNames();
         return Ok(killers);
+    }
+
+    [Authorize]
+    [HttpGet("streaks")]
+    public async Task<IActionResult> GetStreaks()
+    {
+        var publicIdClaim = User.FindFirst("sub")?.Value
+            ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+        if (publicIdClaim == null || !Guid.TryParse(publicIdClaim, out var publicId))
+            return Unauthorized();
+
+        var user = await db.Users.FirstOrDefaultAsync(u => u.PublicId == publicId);
+        if (user == null)
+            return NotFound();
+
+        var streak = await db.Streaks.FirstOrDefaultAsync(s => s.UserId == user.Id);
+        var killerStreaks = await db.StreakKillers
+            .Where(s => s.UserId == user.Id)
+            .OrderByDescending(s => s.BestStreak)
+            .ToListAsync();
+
+        return Ok(new
+        {
+            overall = new { current = streak?.CurrentOverall ?? 0, best = streak?.BestOverall ?? 0 },
+            killer = new { current = streak?.CurrentKiller ?? 0, best = streak?.BestKiller ?? 0 },
+            survivor = new { current = streak?.CurrentSurvivor ?? 0, best = streak?.BestSurvivor ?? 0 },
+            killers = killerStreaks.Select(k => new
+            {
+                killer = k.Killer,
+                current = k.CurrentStreak,
+                best = k.BestStreak
+            })
+        });
     }
 }

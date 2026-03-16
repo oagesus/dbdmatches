@@ -15,4 +15,6 @@ public class User
     public List<MatchSurvivor> SurvivorMatches { get; set; } = [];
     public List<MatchKiller> KillerMatches { get; set; } = [];
     public List<PlayerStatsSnapshot> StatsSnapshots { get; set; } = [];
+    public Streak? Streak { get; set; }
+    public List<StreakKiller> StreakKillers { get; set; } = [];
 }

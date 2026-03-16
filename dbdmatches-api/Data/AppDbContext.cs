@@ -11,6 +11,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<MatchSurvivor> MatchSurvivors => Set<MatchSurvivor>();
     public DbSet<MatchKiller> MatchKillers => Set<MatchKiller>();
     public DbSet<PlayerStatsSnapshot> PlayerStatsSnapshots => Set<PlayerStatsSnapshot>();
+    public DbSet<Streak> Streaks => Set<Streak>();
+    public DbSet<StreakKiller> StreakKillers => Set<StreakKiller>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -97,6 +99,29 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
             entity.HasOne(e => e.User)
                 .WithMany(e => e.StatsSnapshots)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<Streak>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.UserId).IsUnique();
+
+            entity.HasOne(e => e.User)
+                .WithOne(e => e.Streak)
+                .HasForeignKey<Streak>(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<StreakKiller>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => new { e.UserId, e.Killer }).IsUnique();
+            entity.Property(e => e.Killer).HasMaxLength(50);
+
+            entity.HasOne(e => e.User)
+                .WithMany(e => e.StreakKillers)
                 .HasForeignKey(e => e.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
         });

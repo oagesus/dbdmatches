@@ -1,16 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useState } from "react";
-
-interface User {
-  publicId: string;
-  steamId: string;
-  displayName: string;
-  avatarUrl: string | null;
-  status: "Offline" | "Online" | "InGame";
-  nextUpdateSeconds: number;
-  createdAt: string;
-}
+import type { User } from "@/lib/types";
 
 interface AccountContextType {
   user: User;

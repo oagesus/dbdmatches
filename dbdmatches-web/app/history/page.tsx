@@ -15,6 +15,7 @@ interface Props {
     killer?: string;
     page?: string;
     pageSize?: string;
+    period?: string;
   }>;
 }
 
@@ -29,6 +30,7 @@ export default async function HistoryPage({ searchParams }: Props) {
   const params = await searchParams;
   const role = params.role || "all";
   const killer = params.killer || "";
+  const period = params.period || "";
   const page = Math.max(1, Number(params.page) || 1);
   const parsedPageSize = Number(params.pageSize);
   const pageSize = VALID_PAGE_SIZES.includes(parsedPageSize) ? parsedPageSize : DEFAULT_PAGE_SIZE;
@@ -39,13 +41,20 @@ export default async function HistoryPage({ searchParams }: Props) {
   if (killer && role === "killer") {
     historyUrl += `&killer=${encodeURIComponent(killer)}`;
   }
+  if (period) {
+    historyUrl += `&period=${period}`;
+  }
 
-  const [historyRes, killersRes] = await Promise.all([
+  const [historyRes, killersRes, streaksRes] = await Promise.all([
     fetch(historyUrl, {
       headers: { Cookie: cookieHeader },
       cache: "no-store",
     }).catch(() => null),
     fetch(`${API_URL}/api/matches/killers`, {
+      headers: { Cookie: cookieHeader },
+      cache: "no-store",
+    }).catch(() => null),
+    fetch(`${API_URL}/api/matches/streaks`, {
       headers: { Cookie: cookieHeader },
       cache: "no-store",
     }).catch(() => null),
@@ -59,6 +68,10 @@ export default async function HistoryPage({ searchParams }: Props) {
     ? await killersRes.json()
     : [];
 
+  const streaksData = streaksRes?.ok
+    ? await streaksRes.json()
+    : { overall: { current: 0, best: 0 }, killer: { current: 0, best: 0 }, survivor: { current: 0, best: 0 }, killers: [] };
+
   return (
     <HistoryClient
       initialMatches={historyData.matches}
@@ -67,8 +80,10 @@ export default async function HistoryPage({ searchParams }: Props) {
       initialPlayedKillers={killersData}
       initialRole={role}
       initialKiller={killer}
+      initialPeriod={period}
       initialPage={page}
       initialPageSize={pageSize}
+      initialStreaks={streaksData}
     />
   );
 }

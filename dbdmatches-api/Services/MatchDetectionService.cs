@@ -146,6 +146,7 @@ public class MatchDetectionService(
             };
 
             db.MatchKillers.Add(match);
+            await UpdateStreaks(db, userId, result, isKiller: true, killerName: match.Killer);
             logger.LogInformation("Detected killer match for user {UserId}: {Killer}, {Eliminations} eliminations, {Result}",
                 userId, match.Killer, totalEliminations, result);
         }
@@ -166,6 +167,7 @@ public class MatchDetectionService(
             };
 
             db.MatchSurvivors.Add(match);
+            await UpdateStreaks(db, userId, match.Result, isKiller: false, killerName: null);
             logger.LogInformation("Detected survivor match for user {UserId}: escaped={Escaped}, {Result}",
                 userId, escaped, match.Result);
         }
@@ -200,5 +202,67 @@ public class MatchDetectionService(
         }
 
         await db.SaveChangesAsync();
+    }
+
+    private async Task UpdateStreaks(AppDbContext db, int userId, MatchResult result, bool isKiller, string? killerName)
+    {
+        var streak = await db.Streaks.FirstOrDefaultAsync(s => s.UserId == userId);
+        if (streak == null)
+        {
+            streak = new Streak { UserId = userId };
+            db.Streaks.Add(streak);
+        }
+
+        if (result == MatchResult.Win)
+        {
+            streak.CurrentOverall++;
+            if (streak.CurrentOverall > streak.BestOverall)
+                streak.BestOverall = streak.CurrentOverall;
+
+            if (isKiller)
+            {
+                streak.CurrentKiller++;
+                if (streak.CurrentKiller > streak.BestKiller)
+                    streak.BestKiller = streak.CurrentKiller;
+            }
+            else
+            {
+                streak.CurrentSurvivor++;
+                if (streak.CurrentSurvivor > streak.BestSurvivor)
+                    streak.BestSurvivor = streak.CurrentSurvivor;
+            }
+        }
+        else
+        {
+            streak.CurrentOverall = 0;
+
+            if (isKiller)
+                streak.CurrentKiller = 0;
+            else
+                streak.CurrentSurvivor = 0;
+        }
+
+        if (isKiller && killerName != null)
+        {
+            var killerStreak = await db.StreakKillers
+                .FirstOrDefaultAsync(s => s.UserId == userId && s.Killer == killerName);
+
+            if (killerStreak == null)
+            {
+                killerStreak = new StreakKiller { UserId = userId, Killer = killerName };
+                db.StreakKillers.Add(killerStreak);
+            }
+
+            if (result == MatchResult.Win)
+            {
+                killerStreak.CurrentStreak++;
+                if (killerStreak.CurrentStreak > killerStreak.BestStreak)
+                    killerStreak.BestStreak = killerStreak.CurrentStreak;
+            }
+            else
+            {
+                killerStreak.CurrentStreak = 0;
+            }
+        }
     }
 }

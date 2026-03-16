@@ -1,16 +1,9 @@
 import { cookies } from "next/headers";
+import type { User } from "@/lib/types";
+
+export type { User };
 
 const API_URL = process.env.API_URL || "http://localhost:5100";
-
-export interface User {
-  publicId: string;
-  steamId: string;
-  displayName: string;
-  avatarUrl: string | null;
-  status: "Offline" | "Online" | "InGame";
-  nextUpdateSeconds: number;
-  createdAt: string;
-}
 
 export async function getUser(): Promise<User | null> {
   const cookieStore = await cookies();

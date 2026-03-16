@@ -7,34 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Clock, Loader2, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
-
-interface KillerMatchDetails {
-  killerName: string;
-  sacrifices: number;
-  kills: number;
-  powerStat1: number;
-  powerStat1Label: string;
-  powerStat2: number;
-  powerStat2Label: string | null;
-  powerStat3: number;
-  powerStat3Label: string | null;
-}
-
-interface SurvivorMatchDetails {
-  escaped: boolean;
-  hatchEscape: boolean;
-  generatorsCompleted: number;
-}
-
-interface MatchHistoryItem {
-  publicId: string;
-  role: "killer" | "survivor";
-  result: "Win" | "Loss" | "Draw";
-  playedAt: string;
-  bloodpointsEarned: number;
-  killer: KillerMatchDetails | null;
-  survivor: SurvivorMatchDetails | null;
-}
+import type { MatchHistoryItem, StreakData } from "@/lib/types";
 
 interface HistoryClientProps {
   initialMatches: MatchHistoryItem[];
@@ -43,8 +16,10 @@ interface HistoryClientProps {
   initialPlayedKillers: string[];
   initialRole: string;
   initialKiller: string;
+  initialPeriod: string;
   initialPage: number;
   initialPageSize: number;
+  initialStreaks: StreakData;
 }
 
 function getPageRange(currentPage: number, totalPages: number): number[] {
@@ -70,15 +45,15 @@ function formatTimeAgo(dateString: string): string {
   const days = Math.floor(hours / 24);
   if (days < 7) return `${days}d ago`;
 
-  return date.toLocaleDateString(undefined, {
+  return date.toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
-    year: date.getFullYear() !== now.getFullYear() ? "numeric" : undefined,
+    year: "numeric",
   });
 }
 
 function formatBP(bp: number): string {
-  return bp.toLocaleString();
+  return bp.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
 function ResultBadge({ result }: { result: string }) {
@@ -179,10 +154,13 @@ export function HistoryClient({
   initialPlayedKillers,
   initialRole,
   initialKiller,
+  initialPeriod,
   initialPage,
   initialPageSize,
+  initialStreaks,
 }: HistoryClientProps) {
   const router = useRouter();
+  const [streaks, setStreaks] = useState<StreakData>(initialStreaks);
   const [matches, setMatches] = useState<MatchHistoryItem[]>(initialMatches);
   const [totalPages, setTotalPages] = useState(initialTotalPages);
   const [totalCount, setTotalCount] = useState(initialTotalCount);
@@ -193,6 +171,7 @@ export function HistoryClient({
 
   const currentRole = initialRole;
   const currentKiller = initialKiller;
+  const currentPeriod = initialPeriod;
   const currentPage = initialPage;
   const currentPageSize = initialPageSize;
 
@@ -216,10 +195,11 @@ export function HistoryClient({
     };
   }, []);
 
-  const buildUrl = (role: string, page: number, pageSize: number, killer?: string) => {
+  const buildUrl = (role: string, page: number, pageSize: number, killer?: string, period?: string) => {
     const params = new URLSearchParams();
     if (role !== "all") params.set("role", role);
     if (killer) params.set("killer", killer);
+    if (period) params.set("period", period);
     if (page > 1) params.set("page", page.toString());
     if (pageSize !== 20) params.set("pageSize", pageSize.toString());
     const query = params.toString();
@@ -227,19 +207,23 @@ export function HistoryClient({
   };
 
   const setRole = (newRole: string) => {
-    router.push(buildUrl(newRole, 1, currentPageSize));
+    router.push(buildUrl(newRole, 1, currentPageSize, undefined, currentPeriod));
   };
 
   const setPage = (newPage: number) => {
-    router.push(buildUrl(currentRole, newPage, currentPageSize, currentKiller));
+    router.push(buildUrl(currentRole, newPage, currentPageSize, currentKiller, currentPeriod));
   };
 
   const setPageSize = (newSize: number) => {
-    router.push(buildUrl(currentRole, 1, newSize, currentKiller));
+    router.push(buildUrl(currentRole, 1, newSize, currentKiller, currentPeriod));
   };
 
   const setKiller = (newKiller: string) => {
-    router.push(buildUrl(currentRole, 1, currentPageSize, newKiller || undefined));
+    router.push(buildUrl(currentRole, 1, currentPageSize, newKiller || undefined, currentPeriod));
+  };
+
+  const setPeriod = (newPeriod: string) => {
+    router.push(buildUrl(currentRole, 1, currentPageSize, currentKiller, newPeriod === "all" ? undefined : newPeriod));
   };
 
   useEffect(() => {
@@ -262,6 +246,9 @@ export function HistoryClient({
         let url = `/api/matches/history?role=${currentRole}&page=${currentPage}&pageSize=${currentPageSize}`;
         if (currentKiller && currentRole === "killer") {
           url += `&killer=${encodeURIComponent(currentKiller)}`;
+        }
+        if (currentPeriod) {
+          url += `&period=${currentPeriod}`;
         }
         const res = await fetch(url);
         if (!res.ok) {
@@ -297,7 +284,37 @@ export function HistoryClient({
     fetchKillers();
   }, [refreshKey]);
 
+  useEffect(() => {
+    if (refreshKey === 0) return;
+    async function fetchStreaks() {
+      try {
+        const res = await fetch("/api/matches/streaks");
+        if (res.ok) {
+          const data: StreakData = await res.json();
+          setStreaks(data);
+        }
+      } catch { /* ignore */ }
+    }
+    fetchStreaks();
+  }, [refreshKey]);
+
   const validPage = Math.min(Math.max(1, currentPage), totalPages || 1);
+
+  const activeStreaks = currentRole === "killer"
+    ? currentKiller
+      ? streaks.killers.find(k => k.killer === currentKiller) ?? { current: 0, best: 0 }
+      : streaks.killer
+    : currentRole === "survivor"
+      ? streaks.survivor
+      : streaks.overall;
+
+  const streakLabel = currentRole === "killer"
+    ? currentKiller
+      ? currentKiller
+      : "Killer"
+    : currentRole === "survivor"
+      ? "Survivor"
+      : "Overall";
 
   return (
     <div className="flex flex-1 flex-col gap-6">
@@ -315,7 +332,7 @@ export function HistoryClient({
         <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
             <span className="text-xs text-muted-foreground">
-              {totalCount} matches
+              {totalCount} matches played
             </span>
             {currentRole === "killer" && playedKillers.length > 0 && (
               <Select value={currentKiller || "all"} onValueChange={(v) => setKiller(v === "all" ? "" : v)}>
@@ -330,6 +347,17 @@ export function HistoryClient({
                 </SelectContent>
               </Select>
             )}
+            <Select value={currentPeriod || "all"} onValueChange={setPeriod}>
+              <SelectTrigger className="h-7 w-[130px] text-xs cursor-pointer">
+                <SelectValue placeholder="All Time" />
+              </SelectTrigger>
+              <SelectContent position="popper" side="bottom" align="start">
+                <SelectItem value="all" className="cursor-pointer text-xs">All Time</SelectItem>
+                <SelectItem value="30d" className="cursor-pointer text-xs">Last 30 Days</SelectItem>
+                <SelectItem value="90d" className="cursor-pointer text-xs">Last 90 Days</SelectItem>
+                <SelectItem value="1y" className="cursor-pointer text-xs">Last Year</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <Select value={currentPageSize.toString()} onValueChange={(v) => setPageSize(Number(v))}>
             <SelectTrigger className="h-7 w-[100px] text-xs cursor-pointer">
@@ -341,6 +369,17 @@ export function HistoryClient({
               <SelectItem value="100" className="cursor-pointer text-xs">100 / page</SelectItem>
             </SelectContent>
           </Select>
+        </div>
+
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-4 text-sm">
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground">Current {streakLabel} Streak:</span>
+            <span className="font-bold text-lg">{activeStreaks.current}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground">Best {streakLabel} Streak:</span>
+            <span className="font-bold text-lg">{activeStreaks.best}</span>
+          </div>
         </div>
 
         <TabsContent value={currentRole}>

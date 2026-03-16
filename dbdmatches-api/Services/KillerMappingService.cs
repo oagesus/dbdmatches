@@ -33,7 +33,7 @@ public static class KillerMappingService
         ["DBD_Chapter23_Slasher_Stat1"] = new("The Onryō", "DBD_Chapter23_Slasher_Stat1", "DBD_Chapter23_Slasher_Stat2", "Condemned survivors", "Condemn progress"),
         ["DBD_Chapter24_Slasher_Stat1"] = new("The Dredge", "DBD_Chapter24_Slasher_Stat1", "DBD_Chapter24_Slasher_Stat2", "Survivors downed during Nightfall", "Locker teleports"),
         ["DBD_Chapter25_Slasher_Stat1"] = new("The Mastermind", "DBD_Chapter25_Slasher_Stat1", "DBD_Chapter25_Slasher_Stat2", "Survivors slammed into another", "Bound hits"),
-        ["DBD_Chapter26_Slasher_Stat1"] = new("The Knight", "DBD_Chapter26_Slasher_Stat1", "DBD_Chapter26_Slasher_Stat2", "Survivors damaged while actively pursued by a Guard", "Patrol paths"),
+        ["DBD_Chapter26_Slasher_Stat1"] = new("The Knight", "DBD_Chapter26_Slasher_Stat1", "DBD_Chapter26_Slasher_Stat2", "Survivors damaged while actively pursued by a Guard", "Patrol paths"), //need checking
         ["DBD_Chapter27_Slasher_Stat1"] = new("The Skull Merchant", "DBD_Chapter27_Slasher_Stat1", "DBD_Chapter27_Slasher_Stat2", "Survivors downed while exposed by Lock On", "Drone deployments"), //need checking
         ["DBD_Chapter28_Slasher_Stat1"] = new("The Singularity", "DBD_Chapter28_Slasher_Stat1", "DBD_Chapter28_Slasher_Stat2", "Survivors hit after teleporting", "Biopod tags", "DBD_Chapter28_Slasher_Stat3", "Overclock hits"), //need checking
         ["DBD_Chapter29_Slasher_Stat1"] = new("The Xenomorph", "DBD_Chapter29_Slasher_Stat1", "DBD_Chapter29_Slasher_Stat2", "Survivors hit with Tail Attacks", "Tunnel uses", "DBD_Chapter29_Slasher_Stat3", "Runner mode hits"), //need checking
