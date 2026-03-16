@@ -50,7 +50,7 @@ export default function Home() {
             <a href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5100"}/api/auth/steam/login`}><SteamIcon className="h-5 w-5" />Get Started</a>
           </Button>
           <Button size="lg" variant="outline" className="h-15 w-full px-10 text-lg md:w-48" asChild>
-            <Link href="/matches">View Matches</Link>
+            <Link href="/leaderboards">View Leaderboards</Link>
           </Button>
         </div>
       </section>

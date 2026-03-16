@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { LayoutDashboard, History, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, History, Flame, Settings, LogOut } from "lucide-react";
 import { formatNextUpdate, statusLabel, statusColor } from "@/lib/status-utils";
 import { useStatusCountdown } from "@/lib/use-countdown";
 
@@ -84,6 +84,13 @@ export function MobileMenuAuth({ user: initialUser }: { user: User }) {
         >
           <History className="mr-2 h-4 w-4" />
           History
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => router.push("/leaderboards")}
+          className="cursor-pointer"
+        >
+          <Flame className="mr-2 h-4 w-4" />
+          Leaderboards
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem

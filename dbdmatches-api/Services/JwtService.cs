@@ -43,33 +43,6 @@ public class JwtService(IConfiguration configuration)
         return (token, hash);
     }
 
-    public ClaimsPrincipal? ValidateAccessToken(string token)
-    {
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
-            configuration["Jwt:Secret"] ?? throw new InvalidOperationException("JWT secret not configured")));
-
-        var tokenHandler = new JwtSecurityTokenHandler();
-
-        try
-        {
-            return tokenHandler.ValidateToken(token, new TokenValidationParameters
-            {
-                ValidateIssuerSigningKey = true,
-                IssuerSigningKey = key,
-                ValidateIssuer = true,
-                ValidIssuer = configuration["Jwt:Issuer"],
-                ValidateAudience = true,
-                ValidAudience = configuration["Jwt:Audience"],
-                ValidateLifetime = true,
-                ClockSkew = TimeSpan.Zero
-            }, out _);
-        }
-        catch
-        {
-            return null;
-        }
-    }
-
     public string HashToken(string token)
     {
         var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(token));

@@ -41,13 +41,4 @@ public class SteamStatusCacheService
         }
     }
 
-    public Dictionary<string, SteamStatusEntry> GetAll()
-    {
-        return new Dictionary<string, SteamStatusEntry>(_statusCache);
-    }
-
-    public void Remove(string steamId)
-    {
-        _statusCache.TryRemove(steamId, out _);
-    }
 }

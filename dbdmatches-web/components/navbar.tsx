@@ -28,6 +28,9 @@ export async function Navbar() {
               <Button variant="ghost" asChild className="hidden lg:inline-flex">
                 <Link href="/history">History</Link>
               </Button>
+              <Button variant="ghost" asChild className="hidden lg:inline-flex">
+                <Link href="/leaderboards">Leaderboards</Link>
+              </Button>
               <div className="hidden lg:flex items-center">
                 <UserMenu user={user} />
               </div>
@@ -38,7 +41,7 @@ export async function Navbar() {
           ) : (
             <>
               <Button variant="ghost" asChild className="hidden lg:inline-flex">
-                <Link href="/history">History</Link>
+                <Link href="/leaderboards">Leaderboards</Link>
               </Button>
               <Button asChild className="hidden lg:inline-flex">
                 <a href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5100"}/api/auth/steam/login`}>

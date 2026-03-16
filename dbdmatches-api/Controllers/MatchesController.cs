@@ -126,7 +126,7 @@ public class MatchesController(AppDbContext db) : ControllerBase
 
     [Authorize]
     [HttpGet("streaks")]
-    public async Task<IActionResult> GetStreaks()
+    public async Task<IActionResult> GetStreaks([FromQuery] string? period = null)
     {
         var publicIdClaim = User.FindFirst("sub")?.Value
             ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
@@ -137,6 +137,11 @@ public class MatchesController(AppDbContext db) : ControllerBase
         var user = await db.Users.FirstOrDefaultAsync(u => u.PublicId == publicId);
         if (user == null)
             return NotFound();
+
+        if (period != null)
+        {
+            return Ok(await CalculateStreaksForPeriod(user.Id, period));
+        }
 
         var streak = await db.Streaks.FirstOrDefaultAsync(s => s.UserId == user.Id);
         var killerStreaks = await db.StreakKillers
@@ -156,5 +161,41 @@ public class MatchesController(AppDbContext db) : ControllerBase
                 best = k.BestStreak
             })
         });
+    }
+
+    private async Task<object> CalculateStreaksForPeriod(int userId, string period)
+    {
+        DateTimeOffset since = period switch
+        {
+            "30d" => DateTimeOffset.UtcNow.AddDays(-30),
+            "90d" => DateTimeOffset.UtcNow.AddDays(-90),
+            "1y" => DateTimeOffset.UtcNow.AddYears(-1),
+            _ => DateTimeOffset.MinValue
+        };
+
+        var killerMatches = await db.MatchKillers
+            .Where(m => m.UserId == userId && m.PlayedAt >= since)
+            .OrderBy(m => m.PlayedAt)
+            .ToListAsync();
+
+        var survivorMatches = await db.MatchSurvivors
+            .Where(m => m.UserId == userId && m.PlayedAt >= since)
+            .OrderBy(m => m.PlayedAt)
+            .ToListAsync();
+
+        var result = StreakCalculator.Calculate(killerMatches, survivorMatches);
+
+        return new
+        {
+            overall = new { current = result.Overall.Current, best = result.Overall.Best },
+            killer = new { current = result.Killer.Current, best = result.Killer.Best },
+            survivor = new { current = result.Survivor.Current, best = result.Survivor.Best },
+            killers = result.Killers.Select(k => new
+            {
+                killer = k.Killer,
+                current = k.Current,
+                best = k.Best
+            })
+        };
     }
 }

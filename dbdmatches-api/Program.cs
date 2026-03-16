@@ -60,6 +60,8 @@ builder.Services.AddHttpClient<MatchDetectionService>();
 builder.Services.AddSingleton<SteamStatusCacheService>();
 builder.Services.AddHostedService<RefreshTokenCleanupBackgroundService>();
 builder.Services.AddHostedService<SteamStatusPollingBackgroundService>();
+builder.Services.AddSingleton<LeaderboardService>();
+builder.Services.AddHostedService<LeaderboardBackgroundService>();
 
 builder.Services.AddControllers(options =>
 {

@@ -3,11 +3,11 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Clock, Loader2, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
+import { Clock, Loader2, Flame } from "lucide-react";
 import type { MatchHistoryItem, StreakData } from "@/lib/types";
+import { PaginationControls } from "@/components/pagination-controls";
 
 interface HistoryClientProps {
   initialMatches: MatchHistoryItem[];
@@ -22,15 +22,6 @@ interface HistoryClientProps {
   initialStreaks: StreakData;
 }
 
-function getPageRange(currentPage: number, totalPages: number): number[] {
-  const windowSize = Math.min(5, totalPages);
-
-  let start = currentPage - Math.floor(windowSize / 2);
-  start = Math.max(1, start);
-  start = Math.min(start, totalPages - windowSize + 1);
-
-  return Array.from({ length: windowSize }, (_, i) => start + i);
-}
 
 function formatTimeAgo(dateString: string): string {
   const date = new Date(dateString);
@@ -231,7 +222,8 @@ export function HistoryClient({
     setTotalCount(initialTotalCount);
     setTotalPages(initialTotalPages);
     setPlayedKillers(initialPlayedKillers);
-  }, [initialMatches, initialTotalCount, initialTotalPages, initialPlayedKillers]);
+    setStreaks(initialStreaks);
+  }, [initialMatches, initialTotalCount, initialTotalPages, initialPlayedKillers, initialStreaks]);
 
   useEffect(() => {
     if (hasSSRData.current && refreshKey === 0) {
@@ -288,7 +280,7 @@ export function HistoryClient({
     if (refreshKey === 0) return;
     async function fetchStreaks() {
       try {
-        const res = await fetch("/api/matches/streaks");
+        const res = await fetch(`/api/matches/streaks${currentPeriod ? `?period=${currentPeriod}` : ""}`);
         if (res.ok) {
           const data: StreakData = await res.json();
           setStreaks(data);
@@ -297,8 +289,6 @@ export function HistoryClient({
     }
     fetchStreaks();
   }, [refreshKey]);
-
-  const validPage = Math.min(Math.max(1, currentPage), totalPages || 1);
 
   const activeStreaks = currentRole === "killer"
     ? currentKiller
@@ -311,7 +301,7 @@ export function HistoryClient({
   const streakLabel = currentRole === "killer"
     ? currentKiller
       ? currentKiller
-      : "Killer"
+      : "All Killer"
     : currentRole === "survivor"
       ? "Survivor"
       : "Overall";
@@ -320,6 +310,7 @@ export function HistoryClient({
     <div className="flex flex-1 flex-col gap-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Match History</h1>
+        <p className="text-sm text-muted-foreground">{totalCount} matches played</p>
       </div>
 
       <Tabs value={currentRole} onValueChange={setRole}>
@@ -331,9 +322,6 @@ export function HistoryClient({
 
         <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-            <span className="text-xs text-muted-foreground">
-              {totalCount} matches played
-            </span>
             {currentRole === "killer" && playedKillers.length > 0 && (
               <Select value={currentKiller || "all"} onValueChange={(v) => setKiller(v === "all" ? "" : v)}>
                 <SelectTrigger className="h-7 w-[180px] text-xs cursor-pointer">
@@ -349,7 +337,7 @@ export function HistoryClient({
             )}
             <Select value={currentPeriod || "all"} onValueChange={setPeriod}>
               <SelectTrigger className="h-7 w-[130px] text-xs cursor-pointer">
-                <SelectValue placeholder="All Time" />
+                <SelectValue>{{ "all": "All Time", "30d": "Last 30 Days", "90d": "Last 90 Days", "1y": "Last Year" }[currentPeriod || "all"]}</SelectValue>
               </SelectTrigger>
               <SelectContent position="popper" side="bottom" align="start">
                 <SelectItem value="all" className="cursor-pointer text-xs">All Time</SelectItem>
@@ -374,10 +362,12 @@ export function HistoryClient({
         <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-4 text-sm">
           <div className="flex items-center gap-2">
             <span className="text-muted-foreground">Current {streakLabel} Streak:</span>
+            <Flame className="h-4 w-4 text-primary" />
             <span className="font-bold text-lg">{activeStreaks.current}</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-muted-foreground">Best {streakLabel} Streak:</span>
+            <Flame className="h-4 w-4 text-primary" />
             <span className="font-bold text-lg">{activeStreaks.best}</span>
           </div>
         </div>
@@ -399,7 +389,7 @@ export function HistoryClient({
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <p className="text-muted-foreground">No matches found.</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                Play some games and they will appear here.
+                Start playing{currentKiller ? ` ${currentKiller}` : currentRole === "survivor" ? " Survivor" : currentRole === "killer" ? " Killer" : ""} and your matches will appear here.
               </p>
             </div>
           )}
@@ -412,88 +402,7 @@ export function HistoryClient({
                 ))}
               </div>
 
-              {totalPages > 1 && (
-                <div className="flex flex-col gap-1 pt-6">
-                  <div className="flex items-center justify-between md:justify-center md:gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="hidden md:inline-flex h-8 w-8 cursor-pointer"
-                      onClick={() => setPage(1)}
-                      disabled={validPage === 1}
-                    >
-                      <ChevronsLeft className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 cursor-pointer"
-                      onClick={() => setPage(validPage - 1)}
-                      disabled={validPage === 1}
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                    </Button>
-
-                    {getPageRange(validPage, totalPages).map((pageNum) => (
-                      <Button
-                        key={pageNum}
-                        variant={pageNum === validPage ? "default" : "ghost"}
-                        size="icon"
-                        className="h-8 w-8 text-xs cursor-pointer"
-                        onClick={() => setPage(pageNum)}
-                      >
-                        {pageNum}
-                      </Button>
-                    ))}
-
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 cursor-pointer"
-                      onClick={() => setPage(validPage + 1)}
-                      disabled={validPage === totalPages}
-                    >
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="hidden md:inline-flex h-8 w-8 cursor-pointer"
-                      onClick={() => setPage(totalPages)}
-                      disabled={validPage === totalPages}
-                    >
-                      <ChevronsRight className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <div className="flex items-center justify-between md:hidden">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 gap-1 pl-0 text-xs text-muted-foreground cursor-pointer"
-                      onClick={() => setPage(1)}
-                      disabled={validPage === 1}
-                    >
-                      <ChevronsLeft className="h-3.5 w-3.5" />
-                      First
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 gap-1 pr-0 text-xs text-muted-foreground cursor-pointer"
-                      onClick={() => setPage(totalPages)}
-                      disabled={validPage === totalPages}
-                    >
-                      Last
-                      <ChevronsRight className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                  <div className="flex justify-center pt-1">
-                    <span className="text-xs text-muted-foreground">
-                      Page {validPage} of {totalPages}
-                    </span>
-                  </div>
-                </div>
-              )}
+              <PaginationControls currentPage={currentPage} totalPages={totalPages} onPageChange={setPage} />
             </>
           )}
         </TabsContent>

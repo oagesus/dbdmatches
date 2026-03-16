@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { History } from "lucide-react";
+import { Flame } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -45,11 +45,11 @@ export function MobileMenu() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
         <DropdownMenuItem
-          onClick={() => router.push("/history")}
+          onClick={() => router.push("/leaderboards")}
           className="cursor-pointer"
         >
-          <History className="mr-2 h-4 w-4" />
-          History
+          <Flame className="mr-2 h-4 w-4" />
+          Leaderboards
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <div

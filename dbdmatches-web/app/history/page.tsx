@@ -54,7 +54,7 @@ export default async function HistoryPage({ searchParams }: Props) {
       headers: { Cookie: cookieHeader },
       cache: "no-store",
     }).catch(() => null),
-    fetch(`${API_URL}/api/matches/streaks`, {
+    fetch(`${API_URL}/api/matches/streaks${period ? `?period=${period}` : ""}`, {
       headers: { Cookie: cookieHeader },
       cache: "no-store",
     }).catch(() => null),
