@@ -166,7 +166,7 @@ export function LeaderboardClient({
           placeholder="Search by Steam name or Steam ID..."
           value={searchInput}
           onChange={(e) => handleSearchChange(e.target.value)}
-          className="pl-9 h-9"
+          className="pl-9 h-9 text-sm"
         />
       </div>
 
