@@ -9,12 +9,14 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Clock, ArrowLeft, Flame } from "lucide-react";
 import type { MatchHistoryItem, StreakData } from "@/lib/types";
 import { PaginationControls } from "@/components/pagination-controls";
+import { statusColor } from "@/lib/status-utils";
 
 interface PlayerInfo {
   steamId: string;
   displayName: string;
   vanityUrl: string | null;
   avatarUrl: string | null;
+  status: string;
 }
 
 interface PlayerMatchesClientProps {
@@ -243,11 +245,14 @@ export function PlayerMatchesClient({
           Back to Leaderboards
         </button>
         <div className="flex items-center gap-4">
-          {player.avatarUrl ? (
-            <img src={player.avatarUrl} alt={player.displayName} className="h-14 w-14 rounded-full" />
-          ) : (
-            <div className="h-14 w-14 rounded-full bg-muted" />
-          )}
+          <div className="relative inline-block">
+            {player.avatarUrl ? (
+              <img src={player.avatarUrl} alt={player.displayName} className="h-14 w-14 rounded-full" />
+            ) : (
+              <div className="h-14 w-14 rounded-full bg-muted" />
+            )}
+            <span className={`absolute bottom-0 right-0 h-4 w-4 rounded-full border-2 border-background ${statusColor(player.status as "Offline" | "Online" | "InGame")}`} />
+          </div>
           <div>
             <h1 className="text-2xl font-bold">{player.displayName}</h1>
             <a href={player.vanityUrl ? `https://steamcommunity.com/id/${player.vanityUrl}/` : `https://steamcommunity.com/profiles/${steamId}/`} target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-foreground">{player.vanityUrl ? `steamcommunity.com/id/${player.vanityUrl}/` : `steamcommunity.com/profiles/${steamId}/`}</a>

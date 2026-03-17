@@ -7,7 +7,7 @@ namespace DbdMatches.Api.Controllers;
 
 [ApiController]
 [Route("api/leaderboard")]
-public class LeaderboardController(LeaderboardService leaderboardService, AppDbContext db) : ControllerBase
+public class LeaderboardController(LeaderboardService leaderboardService, AppDbContext db, SteamStatusCacheService statusCache) : ControllerBase
 {
     [HttpGet]
     public IActionResult GetLeaderboard(
@@ -171,7 +171,8 @@ public class LeaderboardController(LeaderboardService leaderboardService, AppDbC
                 steamId = user.SteamId,
                 displayName = user.DisplayName,
                 vanityUrl = user.VanityUrl,
-                avatarUrl = user.AvatarUrl
+                avatarUrl = user.AvatarUrl,
+                status = statusCache.Get(user.SteamId).Status.ToString()
             },
             streaks = streaksData
         });
