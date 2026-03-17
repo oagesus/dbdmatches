@@ -134,7 +134,7 @@ public class MatchDetectionService(
             var match = new MatchKiller
             {
                 UserId = userId,
-                Killer = killerInfo?.Name ?? "unknown",
+                Killer = killerInfo?.Name ?? "Untracked Killer",
                 Sacrifices = sacrificesDelta,
                 Kills = killsDelta,
                 PowerStat1 = killerInfo != null ? KillerMappingService.GetPowerStat1Delta(killerInfo, deltas) : 0,

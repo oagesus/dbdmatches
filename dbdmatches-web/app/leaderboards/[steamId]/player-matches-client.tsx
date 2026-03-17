@@ -91,14 +91,20 @@ function MatchCard({ match }: { match: MatchHistoryItem }) {
           {match.killer && (
             <>
               <span>Kills: <span className="text-foreground font-medium">{match.killer.sacrifices + match.killer.kills}</span></span>
-              {match.killer.powerStat1 > 0 && (
-                <span>{match.killer.powerStat1Label}: <span className="text-foreground font-medium">{match.killer.powerStat1}</span></span>
-              )}
-              {match.killer.powerStat2Label && match.killer.powerStat2 > 0 && (
-                <span>{match.killer.powerStat2Label}: <span className="text-foreground font-medium">{match.killer.powerStat2}</span></span>
-              )}
-              {match.killer.powerStat3Label && match.killer.powerStat3 > 0 && (
-                <span>{match.killer.powerStat3Label}: <span className="text-foreground font-medium">{match.killer.powerStat3}</span></span>
+              {match.killer.killerName === "Untracked Killer" ? (
+                <span className="italic">No trackable killer power stats found</span>
+              ) : (
+                <>
+                  {match.killer.powerStat1 > 0 && (
+                    <span>{match.killer.powerStat1Label}: <span className="text-foreground font-medium">{match.killer.powerStat1}</span></span>
+                  )}
+                  {match.killer.powerStat2Label && match.killer.powerStat2 > 0 && (
+                    <span>{match.killer.powerStat2Label}: <span className="text-foreground font-medium">{match.killer.powerStat2}</span></span>
+                  )}
+                  {match.killer.powerStat3Label && match.killer.powerStat3 > 0 && (
+                    <span>{match.killer.powerStat3Label}: <span className="text-foreground font-medium">{match.killer.powerStat3}</span></span>
+                  )}
+                </>
               )}
             </>
           )}
