@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
+
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -13,6 +13,7 @@ import { PaginationControls } from "@/components/pagination-controls";
 interface PlayerInfo {
   steamId: string;
   displayName: string;
+  vanityUrl: string | null;
   avatarUrl: string | null;
 }
 
@@ -224,10 +225,23 @@ export function PlayerMatchesClient({
   return (
     <div className="flex flex-1 flex-col gap-6">
       <div className="flex flex-col gap-4">
-        <Link href="/leaderboards" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground w-fit">
+        <button
+          onClick={() => {
+            if (typeof window !== "undefined") {
+              const returnUrl = sessionStorage.getItem("leaderboard_return_url");
+              if (returnUrl) {
+                sessionStorage.removeItem("leaderboard_return_url");
+                router.push(returnUrl);
+              } else {
+                router.push("/leaderboards");
+              }
+            }
+          }}
+          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground w-fit cursor-pointer"
+        >
           <ArrowLeft className="h-4 w-4" />
           Back to Leaderboards
-        </Link>
+        </button>
         <div className="flex items-center gap-4">
           {player.avatarUrl ? (
             <img src={player.avatarUrl} alt={player.displayName} className="h-14 w-14 rounded-full" />
@@ -236,6 +250,7 @@ export function PlayerMatchesClient({
           )}
           <div>
             <h1 className="text-2xl font-bold">{player.displayName}</h1>
+            <a href={player.vanityUrl ? `https://steamcommunity.com/id/${player.vanityUrl}/` : `https://steamcommunity.com/profiles/${steamId}/`} target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-foreground">{player.vanityUrl ? `steamcommunity.com/id/${player.vanityUrl}/` : `steamcommunity.com/profiles/${steamId}/`}</a>
             <p className="text-sm text-muted-foreground">{totalCount} matches played</p>
           </div>
         </div>

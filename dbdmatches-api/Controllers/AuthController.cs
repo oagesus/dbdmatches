@@ -54,6 +54,7 @@ public class AuthController(
             {
                 SteamId = steamId,
                 DisplayName = playerSummary.PersonaName,
+                VanityUrl = playerSummary.VanityUrl,
                 AvatarUrl = playerSummary.AvatarFull
             };
             db.Users.Add(user);
@@ -62,6 +63,7 @@ public class AuthController(
         else
         {
             user.DisplayName = playerSummary.PersonaName;
+            user.VanityUrl = playerSummary.VanityUrl;
             user.AvatarUrl = playerSummary.AvatarFull;
             await db.SaveChangesAsync();
         }
@@ -187,8 +189,8 @@ public class AuthController(
         var now = DateTimeOffset.UtcNow;
         var currentMinute = now.Minute;
         var currentSecond = now.Second;
-        var minutesUntilNext = intervalMinutes - (currentMinute % intervalMinutes);
-        if (minutesUntilNext == intervalMinutes) minutesUntilNext = 0;
+        var remainder = currentMinute % intervalMinutes;
+        var minutesUntilNext = remainder == 0 ? intervalMinutes : intervalMinutes - remainder;
         var nextUpdateSeconds = (minutesUntilNext * 60) - currentSecond;
         if (nextUpdateSeconds <= 0) nextUpdateSeconds = intervalMinutes * 60;
 

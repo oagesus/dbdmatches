@@ -19,7 +19,7 @@ public class LeaderboardService(IServiceProvider serviceProvider, ILogger<Leader
 
         var users = await db.Users
             .Where(u => !u.IsBlocked)
-            .Select(u => new { u.Id, u.SteamId, u.DisplayName, u.AvatarUrl })
+            .Select(u => new { u.Id, u.SteamId, u.DisplayName, u.VanityUrl, u.AvatarUrl })
             .ToListAsync();
 
         var allKillerMatches = await db.MatchKillers.ToListAsync();
@@ -80,6 +80,7 @@ public class LeaderboardService(IServiceProvider serviceProvider, ILogger<Leader
                 UserId = user.Id,
                 SteamId = user.SteamId,
                 DisplayName = user.DisplayName,
+                VanityUrl = user.VanityUrl,
                 AvatarUrl = user.AvatarUrl,
                 BestOverall = overallBest,
                 BestKiller = killerBest,
@@ -99,7 +100,7 @@ public class LeaderboardService(IServiceProvider serviceProvider, ILogger<Leader
         logger.LogInformation("Leaderboard calculated for {Count} users at {Time}", entries.Count, _lastCalculated);
     }
 
-    public LeaderboardResult GetLeaderboard(string role, string? killer, string? period, int page, int pageSize)
+    public LeaderboardResult GetLeaderboard(string role, string? killer, string? period, int page, int pageSize, string? search = null)
     {
         List<LeaderboardEntry> entries;
         lock (_lock)
@@ -135,17 +136,48 @@ public class LeaderboardService(IServiceProvider serviceProvider, ILogger<Leader
         })
         .Where(x => x.Streak > 0)
         .OrderByDescending(x => x.Streak)
+        .Select((x, i) => new { x.Entry, x.Streak, Rank = i + 1 })
         .ToList();
 
-        var totalCount = ranked.Count;
-        var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
-        var paged = ranked.Skip((page - 1) * pageSize).Take(pageSize).ToList();
-
-        var items = paged.Select((x, i) => new LeaderboardItem
+        var filtered = ranked;
+        if (!string.IsNullOrWhiteSpace(search))
         {
-            Rank = (page - 1) * pageSize + i + 1,
+            var term = search.Trim();
+
+            if (term.Contains("steamcommunity.com/id/", StringComparison.OrdinalIgnoreCase))
+            {
+                var vanity = term.Split("/id/", StringSplitOptions.None).LastOrDefault()?.TrimEnd('/') ?? "";
+                filtered = ranked.Where(x =>
+                    x.Entry.VanityUrl != null && x.Entry.VanityUrl.Equals(vanity, StringComparison.OrdinalIgnoreCase)
+                ).ToList();
+            }
+            else if (term.Contains("steamcommunity.com/profiles/", StringComparison.OrdinalIgnoreCase))
+            {
+                var steamId = term.Split("/profiles/", StringSplitOptions.None).LastOrDefault()?.TrimEnd('/') ?? "";
+                filtered = ranked.Where(x =>
+                    x.Entry.SteamId == steamId
+                ).ToList();
+            }
+            else
+            {
+                filtered = ranked.Where(x =>
+                    x.Entry.DisplayName.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                    x.Entry.SteamId.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                    (x.Entry.VanityUrl != null && x.Entry.VanityUrl.Contains(term, StringComparison.OrdinalIgnoreCase))
+                ).ToList();
+            }
+        }
+
+        var totalCount = filtered.Count;
+        var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+        var paged = filtered.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+
+        var items = paged.Select(x => new LeaderboardItem
+        {
+            Rank = x.Rank,
             SteamId = x.Entry.SteamId,
             DisplayName = x.Entry.DisplayName,
+            VanityUrl = x.Entry.VanityUrl,
             AvatarUrl = x.Entry.AvatarUrl,
             BestStreak = x.Streak,
             TotalMatches = x.Entry.TotalMatches
@@ -187,6 +219,7 @@ public class LeaderboardEntry
     public int UserId { get; set; }
     public required string SteamId { get; set; }
     public required string DisplayName { get; set; }
+    public string? VanityUrl { get; set; }
     public string? AvatarUrl { get; set; }
     public int BestOverall { get; set; }
     public int BestKiller { get; set; }
@@ -209,6 +242,7 @@ public class LeaderboardItem
     public int Rank { get; set; }
     public required string SteamId { get; set; }
     public required string DisplayName { get; set; }
+    public string? VanityUrl { get; set; }
     public string? AvatarUrl { get; set; }
     public int BestStreak { get; set; }
     public int TotalMatches { get; set; }

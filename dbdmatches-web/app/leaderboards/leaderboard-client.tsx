@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Clock, Flame } from "lucide-react";
+import { Clock, Flame, Search } from "lucide-react";
 import type { LeaderboardItem } from "@/lib/leaderboard/get-leaderboard";
 import { PaginationControls } from "@/components/pagination-controls";
 
@@ -19,6 +20,7 @@ interface LeaderboardClientProps {
   initialPage: number;
   initialPageSize: number;
   initialMinutesUntilRefresh: number;
+  initialSearch: string;
 }
 
 
@@ -41,18 +43,21 @@ export function LeaderboardClient({
   initialPage,
   initialPageSize,
   initialMinutesUntilRefresh,
+  initialSearch,
 }: LeaderboardClientProps) {
   const router = useRouter();
   const [items, setItems] = useState(initialItems);
   const [totalPages, setTotalPages] = useState(initialTotalPages);
   const [killers, setKillers] = useState(initialKillers);
   const [minutesLeft, setMinutesLeft] = useState(initialMinutesUntilRefresh);
+  const [searchInput, setSearchInput] = useState(initialSearch);
 
   const currentRole = initialRole;
   const currentKiller = initialKiller;
   const currentPeriod = initialPeriod;
   const currentPage = initialPage;
   const currentPageSize = initialPageSize;
+  const currentSearch = initialSearch;
 
   // Countdown timer - update every minute on the minute
   useEffect(() => {
@@ -103,11 +108,12 @@ export function LeaderboardClient({
     setKillers(initialKillers);
   }, [initialItems, initialTotalPages, initialKillers]);
 
-  const buildUrl = (role: string, page: number, pageSize: number, killer?: string, period?: string) => {
+  const buildUrl = (role: string, page: number, pageSize: number, killer?: string, period?: string, search?: string) => {
     const params = new URLSearchParams();
     if (role !== "all") params.set("role", role);
     if (killer) params.set("killer", killer);
     if (period) params.set("period", period);
+    if (search) params.set("search", search);
     if (page > 1) params.set("page", page.toString());
     if (pageSize !== 20) params.set("pageSize", pageSize.toString());
     const query = params.toString();
@@ -115,24 +121,33 @@ export function LeaderboardClient({
   };
 
   const setRole = (newRole: string) => {
-    router.push(buildUrl(newRole, 1, currentPageSize, undefined, currentPeriod));
+    router.push(buildUrl(newRole, 1, currentPageSize, undefined, currentPeriod, currentSearch));
   };
 
   const setPage = (newPage: number) => {
-    router.push(buildUrl(currentRole, newPage, currentPageSize, currentKiller, currentPeriod));
+    router.push(buildUrl(currentRole, newPage, currentPageSize, currentKiller, currentPeriod, currentSearch));
   };
 
   const setPageSize = (newSize: number) => {
-    router.push(buildUrl(currentRole, 1, newSize, currentKiller, currentPeriod));
+    router.push(buildUrl(currentRole, 1, newSize, currentKiller, currentPeriod, currentSearch));
   };
 
   const setKiller = (newKiller: string) => {
-    router.push(buildUrl(currentRole, 1, currentPageSize, newKiller || undefined, currentPeriod));
+    router.push(buildUrl(currentRole, 1, currentPageSize, newKiller || undefined, currentPeriod, currentSearch));
   };
 
   const setPeriod = (newPeriod: string) => {
-    router.push(buildUrl(currentRole, 1, currentPageSize, currentKiller, newPeriod === "all" ? undefined : newPeriod));
+    router.push(buildUrl(currentRole, 1, currentPageSize, currentKiller, newPeriod === "all" ? undefined : newPeriod, currentSearch));
   };
+
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+  const handleSearchChange = useCallback((value: string) => {
+    setSearchInput(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      router.push(buildUrl(currentRole, 1, currentPageSize, currentKiller, currentPeriod, value.trim() || undefined));
+    }, 300);
+  }, [router, currentRole, currentPageSize, currentKiller, currentPeriod]);
 
   return (
     <div className="flex flex-1 flex-col gap-6">
@@ -142,6 +157,17 @@ export function LeaderboardClient({
           <Clock className="h-4 w-4" />
           <span>Next update in {minutesLeft} minute{minutesLeft !== 1 ? "s" : ""}</span>
         </div>
+      </div>
+
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          type="text"
+          placeholder="Search by Steam name or Steam ID..."
+          value={searchInput}
+          onChange={(e) => handleSearchChange(e.target.value)}
+          className="pl-9 h-9"
+        />
       </div>
 
       <Tabs value={currentRole} onValueChange={setRole}>
@@ -203,6 +229,11 @@ export function LeaderboardClient({
               <Link
                 key={item.steamId}
                 href={`/leaderboards/${item.steamId}`}
+                onClick={() => {
+                  if (typeof window !== "undefined") {
+                    sessionStorage.setItem("leaderboard_return_url", window.location.href);
+                  }
+                }}
                 className="group rounded-lg border border-border bg-card p-4 hover:border-primary hover:bg-primary/10"
               >
                 <div className="flex items-center justify-between">
@@ -219,7 +250,10 @@ export function LeaderboardClient({
                     ) : (
                       <div className="h-10 w-10 rounded-full bg-muted" />
                     )}
-                    <p className="font-medium">{item.displayName}</p>
+                    <div>
+                      <p className="font-medium">{item.displayName}</p>
+                      <p className="text-xs text-muted-foreground">{item.vanityUrl ? `steamcommunity.com/id/${item.vanityUrl}/` : `steamcommunity.com/profiles/${item.steamId}/`}</p>
+                    </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <Flame className="h-4 w-4 text-primary" />

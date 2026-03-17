@@ -4,6 +4,7 @@ export interface LeaderboardItem {
   rank: number;
   steamId: string;
   displayName: string;
+  vanityUrl: string | null;
   avatarUrl: string | null;
   bestStreak: number;
   totalMatches: number;
@@ -23,11 +24,13 @@ export async function getLeaderboard(
   killer: string,
   period: string,
   page: number,
-  pageSize: number
+  pageSize: number,
+  search?: string
 ): Promise<LeaderboardResponse> {
   let url = `${API_URL}/api/leaderboard?role=${role}&page=${page}&pageSize=${pageSize}`;
   if (killer && role === "killer") url += `&killer=${encodeURIComponent(killer)}`;
   if (period) url += `&period=${period}`;
+  if (search) url += `&search=${encodeURIComponent(search)}`;
 
   try {
     const res = await fetch(url, { cache: "no-store" });

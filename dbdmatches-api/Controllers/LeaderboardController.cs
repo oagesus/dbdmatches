@@ -15,13 +15,14 @@ public class LeaderboardController(LeaderboardService leaderboardService, AppDbC
         [FromQuery] string? killer = null,
         [FromQuery] string? period = null,
         [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 20)
+        [FromQuery] int pageSize = 20,
+        [FromQuery] string? search = null)
     {
         if (page < 1) page = 1;
         if (pageSize < 1) pageSize = 20;
         if (pageSize > 100) pageSize = 100;
 
-        var result = leaderboardService.GetLeaderboard(role, killer, period, page, pageSize);
+        var result = leaderboardService.GetLeaderboard(role, killer, period, page, pageSize, search);
         return Ok(result);
     }
 
@@ -169,6 +170,7 @@ public class LeaderboardController(LeaderboardService leaderboardService, AppDbC
             {
                 steamId = user.SteamId,
                 displayName = user.DisplayName,
+                vanityUrl = user.VanityUrl,
                 avatarUrl = user.AvatarUrl
             },
             streaks = streaksData

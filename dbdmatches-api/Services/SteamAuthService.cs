@@ -72,14 +72,28 @@ public class SteamAuthService(IConfiguration configuration, HttpClient httpClien
 
         var player = players[0];
 
+        var profileUrl = player.TryGetProperty("profileurl", out var pUrl) ? pUrl.GetString() : null;
+
         return new SteamPlayerSummary(
             SteamId: player.GetProperty("steamid").GetString()!,
             PersonaName: player.GetProperty("personaname").GetString()!,
-            AvatarFull: player.TryGetProperty("avatarfull", out var avatar) ? avatar.GetString() : null
+            AvatarFull: player.TryGetProperty("avatarfull", out var avatar) ? avatar.GetString() : null,
+            VanityUrl: ExtractVanityUrl(profileUrl)
         );
     }
 
-    public record PlayerInfo(SteamStatus Status, string DisplayName, string AvatarUrl);
+    public record PlayerInfo(SteamStatus Status, string DisplayName, string AvatarUrl, string? VanityUrl);
+
+    private static string? ExtractVanityUrl(string? profileUrl)
+    {
+        if (string.IsNullOrEmpty(profileUrl)) return null;
+        if (profileUrl.Contains("/id/"))
+        {
+            var parts = profileUrl.TrimEnd('/').Split('/');
+            return parts.Length > 0 ? parts[^1] : null;
+        }
+        return null;
+    }
 
     public async Task<Dictionary<string, PlayerInfo>> GetBulkPlayerStatuses(IEnumerable<string> steamIds)
     {
@@ -112,12 +126,14 @@ public class SteamAuthService(IConfiguration configuration, HttpClient httpClien
                 var isPlayingDbd = player.TryGetProperty("gameid", out var gameId) && gameId.GetString() == DbdAppId;
                 var displayName = player.TryGetProperty("personaname", out var name) ? name.GetString() ?? "" : "";
                 var avatarUrl = player.TryGetProperty("avatarfull", out var avatar) ? avatar.GetString() ?? "" : "";
+                var profileUrl = player.TryGetProperty("profileurl", out var pUrl) ? pUrl.GetString() : null;
+                var vanityUrl = ExtractVanityUrl(profileUrl);
 
                 var status = isPlayingDbd ? SteamStatus.InGame
                     : personaState > 0 ? SteamStatus.Online
                     : SteamStatus.Offline;
 
-                result[steamId] = new PlayerInfo(status, displayName, avatarUrl);
+                result[steamId] = new PlayerInfo(status, displayName, avatarUrl, vanityUrl);
             }
         }
 

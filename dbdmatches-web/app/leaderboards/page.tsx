@@ -15,6 +15,7 @@ interface Props {
     period?: string;
     page?: string;
     pageSize?: string;
+    search?: string;
   }>;
 }
 
@@ -23,12 +24,13 @@ export default async function LeaderboardPage({ searchParams }: Props) {
   const role = params.role || "all";
   const killer = params.killer || "";
   const period = params.period || "";
+  const search = params.search || "";
   const page = Math.max(1, Number(params.page) || 1);
   const parsedPageSize = Number(params.pageSize);
   const pageSize = VALID_PAGE_SIZES.includes(parsedPageSize) ? parsedPageSize : DEFAULT_PAGE_SIZE;
 
   const [leaderboardData, killersRes] = await Promise.all([
-    getLeaderboard(role, killer, period, page, pageSize),
+    getLeaderboard(role, killer, period, page, pageSize, search),
     fetch(`${API_URL}/api/matches/killers`, { cache: "no-store" }).catch(() => null),
   ]);
 
@@ -48,6 +50,7 @@ export default async function LeaderboardPage({ searchParams }: Props) {
       initialPage={page}
       initialPageSize={pageSize}
       initialMinutesUntilRefresh={minutesUntilNextHour}
+      initialSearch={search}
     />
   );
 }

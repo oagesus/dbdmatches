@@ -6,6 +6,7 @@ public class User
     public Guid PublicId { get; set; }
     public required string SteamId { get; set; }
     public required string DisplayName { get; set; }
+    public string? VanityUrl { get; set; }
     public string? AvatarUrl { get; set; }
     public bool IsBlocked { get; set; }
     public DateTimeOffset CreatedAt { get; set; }

@@ -5,14 +5,13 @@ import { useState, useEffect, useRef, useCallback } from "react";
 export function useStatusCountdown(initialSeconds: number) {
   const [seconds, setSeconds] = useState(initialSeconds);
   const [status, setStatus] = useState<Record<string, unknown> | null>(null);
-  const [isUpdating, setIsUpdating] = useState(false);
   const endTimeRef = useRef(Date.now() + initialSeconds * 1000);
   const isFetchingRef = useRef(false);
 
   const refetchStatus = useCallback(async () => {
     if (isFetchingRef.current) return;
     isFetchingRef.current = true;
-    setIsUpdating(true);
+
 
     try {
       const res = await fetch("/api/auth/me");
@@ -30,7 +29,7 @@ export function useStatusCountdown(initialSeconds: number) {
       setSeconds(60);
     } finally {
       isFetchingRef.current = false;
-      setIsUpdating(false);
+
     }
   }, []);
 
@@ -68,5 +67,5 @@ export function useStatusCountdown(initialSeconds: number) {
     };
   }, [refetchStatus]);
 
-  return { seconds, updatedUser: status, isUpdating };
+  return { seconds, updatedUser: status };
 }

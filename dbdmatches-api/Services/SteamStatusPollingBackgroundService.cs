@@ -10,19 +10,18 @@ public class SteamStatusPollingBackgroundService(
     ILogger<SteamStatusPollingBackgroundService> logger) : BackgroundService
 {
 
-
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        // Wait until the next full minute to align polling to clock boundaries
-        var startDelay = TimeSpan.FromSeconds(60 - DateTimeOffset.UtcNow.Second);
-        await Task.Delay(startDelay, stoppingToken);
+        var secondsUntilNext = 60 - DateTimeOffset.UtcNow.Second - 5;
+        if (secondsUntilNext <= 0) secondsUntilNext += 60;
+        await Task.Delay(TimeSpan.FromSeconds(secondsUntilNext), stoppingToken);
 
         while (!stoppingToken.IsCancellationRequested)
         {
             try
             {
                 var now = DateTimeOffset.UtcNow;
-                var currentMinute = now.Minute;
+                var currentMinute = (now.Second >= 55) ? (now.Minute + 1) % 60 : now.Minute;
 
                 using var scope = scopeFactory.CreateScope();
                 var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -66,10 +65,11 @@ public class SteamStatusPollingBackgroundService(
                     {
                         if (playerInfos.TryGetValue(user.SteamId, out var info))
                         {
-                            if (user.DisplayName != info.DisplayName || user.AvatarUrl != info.AvatarUrl)
+                            if (user.DisplayName != info.DisplayName || user.AvatarUrl != info.AvatarUrl || user.VanityUrl != info.VanityUrl)
                             {
                                 user.DisplayName = info.DisplayName;
                                 user.AvatarUrl = info.AvatarUrl;
+                                user.VanityUrl = info.VanityUrl;
                             }
                         }
                     }
@@ -120,9 +120,9 @@ public class SteamStatusPollingBackgroundService(
                 logger.LogError(ex, "Error polling Steam statuses");
             }
 
-            // Wait until the next full minute
-            var nextMinute = TimeSpan.FromSeconds(60 - DateTimeOffset.UtcNow.Second);
-            await Task.Delay(nextMinute, stoppingToken);
+            var secsUntilNext = 60 - DateTimeOffset.UtcNow.Second - 5;
+            if (secsUntilNext <= 0) secsUntilNext += 60;
+            await Task.Delay(TimeSpan.FromSeconds(secsUntilNext), stoppingToken);
         }
     }
 }

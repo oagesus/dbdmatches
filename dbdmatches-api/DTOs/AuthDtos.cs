@@ -13,5 +13,6 @@ public record UserResponse(
 public record SteamPlayerSummary(
     string SteamId,
     string PersonaName,
-    string? AvatarFull
+    string? AvatarFull,
+    string? VanityUrl
 );

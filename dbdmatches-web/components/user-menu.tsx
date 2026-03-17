@@ -21,7 +21,7 @@ import { useStatusCountdown } from "@/lib/use-countdown";
 export function UserMenu({ user: initialUser }: { user: User }) {
   const router = useRouter();
   const [user, setUser] = useState(initialUser);
-  const { seconds, updatedUser, isUpdating } = useStatusCountdown(user.nextUpdateSeconds);
+  const { seconds, updatedUser } = useStatusCountdown(user.nextUpdateSeconds);
 
   useEffect(() => {
     if (updatedUser) {
@@ -71,7 +71,7 @@ export function UserMenu({ user: initialUser }: { user: User }) {
           <p className="text-sm font-medium">{user.displayName}</p>
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <span className={`h-2 w-2 rounded-full ${statusColor(user.status)}`} />
-            {statusLabel(user.status)} · {isUpdating ? "updating..." : `updates in ${formatNextUpdate(seconds)}`}
+            {statusLabel(user.status)} · updates in {formatNextUpdate(seconds)}
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
