@@ -33,7 +33,7 @@ public class LeaderboardService(IServiceProvider serviceProvider, ILogger<Leader
             var survivorMatches = allSurvivorMatches.Where(m => m.UserId == user.Id).OrderBy(m => m.PlayedAt).ToList();
 
             var allMatches = killerMatches
-                .Select(m => new { m.PlayedAt, m.Result, Role = "killer", Killer = m.Killer })
+                .Select(m => new { m.PlayedAt, m.Result, Role = "killer", Killer = (string?)m.Killer })
                 .Concat(survivorMatches.Select(m => new { m.PlayedAt, m.Result, Role = "survivor", Killer = (string?)null }))
                 .OrderBy(m => m.PlayedAt)
                 .ToList();

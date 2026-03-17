@@ -66,9 +66,9 @@ public class AuthController(
             await db.SaveChangesAsync();
         }
 
-        var statuses = await steamAuthService.GetBulkPlayerStatuses([steamId]);
-        if (statuses.TryGetValue(steamId, out var status))
-            statusCache.Set(steamId, status);
+        var playerInfos = await steamAuthService.GetBulkPlayerStatuses([steamId]);
+        if (playerInfos.TryGetValue(steamId, out var playerInfo))
+            statusCache.Set(steamId, playerInfo.Status);
 
         if (user.IsBlocked)
             return Redirect($"{frontendUrl}/auth/login?error=account_blocked");
@@ -183,9 +183,14 @@ public class AuthController(
 
         var entry = statusCache.Get(user.SteamId);
         var interval = statusCache.GetInterval(entry.Status);
-        var elapsed = DateTimeOffset.UtcNow - entry.UpdatedAt;
-        var remaining = (int)(interval - elapsed).TotalSeconds;
-        var nextUpdateSeconds = remaining > 0 ? remaining : (int)interval.TotalSeconds;
+        var intervalMinutes = (int)interval.TotalMinutes;
+        var now = DateTimeOffset.UtcNow;
+        var currentMinute = now.Minute;
+        var currentSecond = now.Second;
+        var minutesUntilNext = intervalMinutes - (currentMinute % intervalMinutes);
+        if (minutesUntilNext == intervalMinutes) minutesUntilNext = 0;
+        var nextUpdateSeconds = (minutesUntilNext * 60) - currentSecond;
+        if (nextUpdateSeconds <= 0) nextUpdateSeconds = intervalMinutes * 60;
 
         return Ok(new UserResponse(
             user.PublicId,

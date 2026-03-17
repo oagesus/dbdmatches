@@ -19,7 +19,7 @@ public static class StreakCalculator
         List<MatchSurvivor> survivorMatches)
     {
         var allMatches = killerMatches
-            .Select(m => new { m.PlayedAt, m.Result, Role = "killer", Killer = m.Killer })
+            .Select(m => new { m.PlayedAt, m.Result, Role = "killer", Killer = (string?)m.Killer })
             .Concat(survivorMatches.Select(m => new { m.PlayedAt, m.Result, Role = "survivor", Killer = (string?)null }))
             .OrderBy(m => m.PlayedAt)
             .ToList();

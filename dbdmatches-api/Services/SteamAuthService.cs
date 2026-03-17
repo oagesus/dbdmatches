@@ -79,12 +79,14 @@ public class SteamAuthService(IConfiguration configuration, HttpClient httpClien
         );
     }
 
-    public async Task<Dictionary<string, SteamStatus>> GetBulkPlayerStatuses(IEnumerable<string> steamIds)
+    public record PlayerInfo(SteamStatus Status, string DisplayName, string AvatarUrl);
+
+    public async Task<Dictionary<string, PlayerInfo>> GetBulkPlayerStatuses(IEnumerable<string> steamIds)
     {
         var apiKey = configuration["Steam:ApiKey"]
             ?? throw new InvalidOperationException("Steam API key not configured");
 
-        var result = new Dictionary<string, SteamStatus>();
+        var result = new Dictionary<string, PlayerInfo>();
         var idList = steamIds.ToList();
 
         foreach (var batch in idList.Chunk(100))
@@ -108,13 +110,14 @@ public class SteamAuthService(IConfiguration configuration, HttpClient httpClien
                 var steamId = player.GetProperty("steamid").GetString()!;
                 var personaState = player.GetProperty("personastate").GetInt32();
                 var isPlayingDbd = player.TryGetProperty("gameid", out var gameId) && gameId.GetString() == DbdAppId;
+                var displayName = player.TryGetProperty("personaname", out var name) ? name.GetString() ?? "" : "";
+                var avatarUrl = player.TryGetProperty("avatarfull", out var avatar) ? avatar.GetString() ?? "" : "";
 
-                if (isPlayingDbd)
-                    result[steamId] = SteamStatus.InGame;
-                else if (personaState > 0)
-                    result[steamId] = SteamStatus.Online;
-                else
-                    result[steamId] = SteamStatus.Offline;
+                var status = isPlayingDbd ? SteamStatus.InGame
+                    : personaState > 0 ? SteamStatus.Online
+                    : SteamStatus.Offline;
+
+                result[steamId] = new PlayerInfo(status, displayName, avatarUrl);
             }
         }
 

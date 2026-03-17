@@ -10,17 +10,19 @@ public class SteamStatusPollingBackgroundService(
     ILogger<SteamStatusPollingBackgroundService> logger) : BackgroundService
 {
 
-    private DateTimeOffset _lastInGamePoll = DateTimeOffset.MinValue;
-    private DateTimeOffset _lastOnlinePoll = DateTimeOffset.MinValue;
-    private DateTimeOffset _lastOfflinePoll = DateTimeOffset.MinValue;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        // Wait until the next full minute to align polling to clock boundaries
+        var startDelay = TimeSpan.FromSeconds(60 - DateTimeOffset.UtcNow.Second);
+        await Task.Delay(startDelay, stoppingToken);
+
         while (!stoppingToken.IsCancellationRequested)
         {
             try
             {
                 var now = DateTimeOffset.UtcNow;
+                var currentMinute = now.Minute;
 
                 using var scope = scopeFactory.CreateScope();
                 var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -28,14 +30,17 @@ public class SteamStatusPollingBackgroundService(
 
                 var allUsers = await db.Users
                     .Where(u => !u.IsBlocked)
-                    .Select(u => new { u.Id, u.SteamId })
                     .ToListAsync(stoppingToken);
 
                 var steamIdsToPoll = new List<string>();
 
-                var pollInGame = now - _lastInGamePoll >= SteamStatusCacheService.InGamePollingInterval;
-                var pollOnline = now - _lastOnlinePoll >= SteamStatusCacheService.OnlinePollingInterval;
-                var pollOffline = now - _lastOfflinePoll >= SteamStatusCacheService.OfflinePollingInterval;
+                var inGameMinutes = (int)SteamStatusCacheService.InGamePollingInterval.TotalMinutes;
+                var onlineMinutes = (int)SteamStatusCacheService.OnlinePollingInterval.TotalMinutes;
+                var offlineMinutes = (int)SteamStatusCacheService.OfflinePollingInterval.TotalMinutes;
+
+                var pollInGame = currentMinute % inGameMinutes == 0;
+                var pollOnline = currentMinute % onlineMinutes == 0;
+                var pollOffline = currentMinute % offlineMinutes == 0;
 
                 foreach (var user in allUsers)
                 {
@@ -54,12 +59,22 @@ public class SteamStatusPollingBackgroundService(
 
                 if (steamIdsToPoll.Count > 0)
                 {
-                    var statuses = await steamAuthService.GetBulkPlayerStatuses(steamIdsToPoll);
-                    statusCache.SetBulk(statuses);
+                    var playerInfos = await steamAuthService.GetBulkPlayerStatuses(steamIdsToPoll);
+                    statusCache.SetBulk(playerInfos);
 
-                    if (pollInGame) _lastInGamePoll = now;
-                    if (pollOnline) _lastOnlinePoll = now;
-                    if (pollOffline) _lastOfflinePoll = now;
+                    foreach (var user in allUsers)
+                    {
+                        if (playerInfos.TryGetValue(user.SteamId, out var info))
+                        {
+                            if (user.DisplayName != info.DisplayName || user.AvatarUrl != info.AvatarUrl)
+                            {
+                                user.DisplayName = info.DisplayName;
+                                user.AvatarUrl = info.AvatarUrl;
+                            }
+                        }
+                    }
+
+                    await db.SaveChangesAsync(stoppingToken);
 
                     logger.LogInformation("Polled status for {Count} users", steamIdsToPoll.Count);
                 }
@@ -105,7 +120,9 @@ public class SteamStatusPollingBackgroundService(
                 logger.LogError(ex, "Error polling Steam statuses");
             }
 
-            await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+            // Wait until the next full minute
+            var nextMinute = TimeSpan.FromSeconds(60 - DateTimeOffset.UtcNow.Second);
+            await Task.Delay(nextMinute, stoppingToken);
         }
     }
 }

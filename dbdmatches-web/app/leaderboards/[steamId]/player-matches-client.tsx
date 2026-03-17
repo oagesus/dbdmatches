@@ -147,6 +147,21 @@ export function PlayerMatchesClient({
     setStreaks(initialStreaks);
   }, [initialMatches, initialTotalPages, initialTotalCount, initialKillers, initialStreaks]);
 
+  useEffect(() => {
+    const now = new Date();
+    const msUntilNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
+
+    const timeout = setTimeout(() => {
+      router.refresh();
+      const interval = setInterval(() => {
+        router.refresh();
+      }, 60000);
+      return () => clearInterval(interval);
+    }, msUntilNextMinute);
+
+    return () => clearTimeout(timeout);
+  }, [router]);
+
   const currentRole = initialRole;
   const currentKiller = initialKiller;
   const currentPeriod = initialPeriod;

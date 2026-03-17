@@ -32,12 +32,12 @@ public class SteamStatusCacheService
             : new SteamStatusEntry(SteamStatus.Offline, DateTimeOffset.UtcNow);
     }
 
-    public void SetBulk(Dictionary<string, SteamStatus> statuses)
+    public void SetBulk(Dictionary<string, SteamAuthService.PlayerInfo> playerInfos)
     {
         var now = DateTimeOffset.UtcNow;
-        foreach (var (steamId, status) in statuses)
+        foreach (var (steamId, info) in playerInfos)
         {
-            _statusCache[steamId] = new SteamStatusEntry(status, now);
+            _statusCache[steamId] = new SteamStatusEntry(info.Status, now);
         }
     }
 
