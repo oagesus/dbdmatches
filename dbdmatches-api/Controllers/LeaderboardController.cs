@@ -64,25 +64,18 @@ public class LeaderboardController(LeaderboardService leaderboardService, AppDbC
             var killerMatches = await killerQuery.OrderByDescending(m => m.PlayedAt).ToListAsync();
             foreach (var m in killerMatches)
             {
-                var killerInfo = KillerMappingService.GetByName(m.Killer);
                 items.Add(new
                 {
                     publicId = m.PublicId,
                     role = "killer",
                     result = m.Result.ToString(),
                     playedAt = m.PlayedAt,
-                    bloodpointsEarned = m.BloodpointsEarned,
+                    isContaminated = m.IsContaminated,
                     killer = new
                     {
                         killerName = m.Killer,
                         sacrifices = m.Sacrifices,
-                        kills = m.Kills,
-                        powerStat1 = m.PowerStat1,
-                        powerStat1Label = killerInfo?.Stat1Label ?? "Power stat 1",
-                        powerStat2 = m.PowerStat2,
-                        powerStat2Label = killerInfo?.Stat2Label,
-                        powerStat3 = m.PowerStat3,
-                        powerStat3Label = killerInfo?.Stat3Label
+                        kills = m.Kills
                     },
                     survivor = (object?)null
                 });
@@ -104,13 +97,12 @@ public class LeaderboardController(LeaderboardService leaderboardService, AppDbC
                     role = "survivor",
                     result = m.Result.ToString(),
                     playedAt = m.PlayedAt,
-                    bloodpointsEarned = m.BloodpointsEarned,
+                    isContaminated = m.IsContaminated,
                     killer = (object?)null,
                     survivor = new
                     {
                         escaped = m.Escaped,
-                        hatchEscape = m.HatchEscape,
-                        generatorsCompleted = m.GeneratorsCompleted
+                        hatchEscape = m.HatchEscape
                     }
                 });
             }
@@ -125,11 +117,11 @@ public class LeaderboardController(LeaderboardService leaderboardService, AppDbC
         if (since.HasValue)
         {
             var allKillerMatches = await db.MatchKillers
-                .Where(m => m.UserId == user.Id && m.PlayedAt >= since.Value)
+                .Where(m => m.UserId == user.Id && !m.IsContaminated && m.PlayedAt >= since.Value)
                 .OrderBy(m => m.PlayedAt)
                 .ToListAsync();
             var allSurvivorMatches = await db.MatchSurvivors
-                .Where(m => m.UserId == user.Id && m.PlayedAt >= since.Value)
+                .Where(m => m.UserId == user.Id && !m.IsContaminated && m.PlayedAt >= since.Value)
                 .OrderBy(m => m.PlayedAt)
                 .ToListAsync();
 

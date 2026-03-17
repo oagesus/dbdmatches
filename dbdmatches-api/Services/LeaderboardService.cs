@@ -22,8 +22,8 @@ public class LeaderboardService(IServiceProvider serviceProvider, ILogger<Leader
             .Select(u => new { u.Id, u.SteamId, u.DisplayName, u.VanityUrl, u.AvatarUrl })
             .ToListAsync();
 
-        var allKillerMatches = await db.MatchKillers.ToListAsync();
-        var allSurvivorMatches = await db.MatchSurvivors.ToListAsync();
+        var allKillerMatches = await db.MatchKillers.Where(m => !m.IsContaminated).ToListAsync();
+        var allSurvivorMatches = await db.MatchSurvivors.Where(m => !m.IsContaminated).ToListAsync();
 
         var entries = new List<LeaderboardEntry>();
 

@@ -6,7 +6,6 @@ public class LeaderboardBackgroundService(
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        await Task.Delay(TimeSpan.FromSeconds(15), stoppingToken);
         await CalculateLeaderboard();
 
         while (!stoppingToken.IsCancellationRequested)

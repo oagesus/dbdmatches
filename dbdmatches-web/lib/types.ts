@@ -12,18 +12,11 @@ export interface KillerMatchDetails {
   killerName: string;
   sacrifices: number;
   kills: number;
-  powerStat1: number;
-  powerStat1Label: string;
-  powerStat2: number;
-  powerStat2Label: string | null;
-  powerStat3: number;
-  powerStat3Label: string | null;
 }
 
 export interface SurvivorMatchDetails {
   escaped: boolean;
   hatchEscape: boolean;
-  generatorsCompleted: number;
 }
 
 export interface MatchHistoryItem {
@@ -31,7 +24,7 @@ export interface MatchHistoryItem {
   role: "killer" | "survivor";
   result: "Win" | "Loss" | "Draw";
   playedAt: string;
-  bloodpointsEarned: number;
+  isContaminated: boolean;
   killer: KillerMatchDetails | null;
   survivor: SurvivorMatchDetails | null;
 }

@@ -50,9 +50,7 @@ function ResultBadge({ result }: { result: string }) {
   return <Badge variant="outline" className={colors[result] || ""}>{result}</Badge>;
 }
 
-function formatBP(bp: number): string {
-  return bp.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-}
+
 
 function formatTimeAgo(dateString: string): string {
   const date = new Date(dateString);
@@ -75,53 +73,45 @@ function formatTimeAgo(dateString: string): string {
 }
 
 function MatchCard({ match }: { match: MatchHistoryItem }) {
+  const contaminated = match.isContaminated;
+  const cardColor = contaminated
+    ? "border-blue-500/40 bg-blue-500/5 hover:border-blue-500 hover:bg-blue-500/10"
+    : resultColors[match.result] || "border-border bg-card";
+
   return (
-    <div className={`rounded-lg border p-4 ${resultColors[match.result] || "border-border bg-card"}`}>
+    <div className={`rounded-lg border p-4 ${cardColor}`}>
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="font-medium">
               {match.role === "killer" ? match.killer?.killerName : "Survivor"}
             </span>
-            <ResultBadge result={match.result} />
+            {contaminated ? (
+              <Badge variant="outline" className="bg-blue-500/20 text-blue-500 border-blue-500/30">Contaminated</Badge>
+            ) : (
+              <ResultBadge result={match.result} />
+            )}
           </div>
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground shrink-0">
             <Clock className="h-3.5 w-3.5" />
             {formatTimeAgo(match.playedAt)}
           </div>
         </div>
-        <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
-          {match.killer && (
-            <>
+        {contaminated ? (
+          <p className="text-xs italic text-muted-foreground">Match data may be inaccurate due to non-full-loadout matches played before this match. This match does not count towards streaks.</p>
+        ) : (
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
+            {match.killer && (
               <span>Kills: <span className="text-foreground font-medium">{match.killer.sacrifices + match.killer.kills}</span></span>
-              {match.killer.killerName === "Untracked Killer" ? (
-                <span className="italic">No trackable killer power stats found</span>
-              ) : (
-                <>
-                  {match.killer.powerStat1 > 0 && (
-                    <span>{match.killer.powerStat1Label}: <span className="text-foreground font-medium">{match.killer.powerStat1}</span></span>
-                  )}
-                  {match.killer.powerStat2Label && match.killer.powerStat2 > 0 && (
-                    <span>{match.killer.powerStat2Label}: <span className="text-foreground font-medium">{match.killer.powerStat2}</span></span>
-                  )}
-                  {match.killer.powerStat3Label && match.killer.powerStat3 > 0 && (
-                    <span>{match.killer.powerStat3Label}: <span className="text-foreground font-medium">{match.killer.powerStat3}</span></span>
-                  )}
-                </>
-              )}
-            </>
-          )}
-          {match.survivor && (
-            <>
-              <span>Gate Escape: <span className="text-foreground font-medium">{match.survivor.escaped && !match.survivor.hatchEscape ? "Yes" : "No"}</span></span>
-              <span>Hatch Escape: <span className="text-foreground font-medium">{match.survivor.hatchEscape ? "Yes" : "No"}</span></span>
-              <span>Generators: <span className="text-foreground font-medium">{match.survivor.generatorsCompleted}</span></span>
-            </>
-          )}
-          <span>
-            BP: <span className="text-foreground font-medium">{formatBP(match.bloodpointsEarned)}</span>
-          </span>
-        </div>
+            )}
+            {match.survivor && (
+              <>
+                <span>Gate Escape: <span className="text-foreground font-medium">{match.survivor.escaped && !match.survivor.hatchEscape ? "Yes" : "No"}</span></span>
+                <span>Hatch Escape: <span className="text-foreground font-medium">{match.survivor.hatchEscape ? "Yes" : "No"}</span></span>
+              </>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

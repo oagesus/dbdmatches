@@ -55,24 +55,16 @@ public class MatchesController(AppDbContext db) : ControllerBase
 
             foreach (var m in killerMatches)
             {
-                var killerInfo = KillerMappingService.GetByName(m.Killer);
-
                 items.Add(new MatchHistoryItem(
                     m.PublicId,
                     "killer",
                     m.Result.ToString(),
                     m.PlayedAt,
-                    m.BloodpointsEarned,
+                    m.IsContaminated,
                     new KillerMatchDetails(
                         m.Killer,
                         m.Sacrifices,
-                        m.Kills,
-                        m.PowerStat1,
-                        killerInfo?.Stat1Label ?? "Power stat 1",
-                        m.PowerStat2,
-                        killerInfo?.Stat2Label,
-                        m.PowerStat3,
-                        killerInfo?.Stat3Label
+                        m.Kills
                     ),
                     null
                 ));
@@ -98,12 +90,11 @@ public class MatchesController(AppDbContext db) : ControllerBase
                     "survivor",
                     m.Result.ToString(),
                     m.PlayedAt,
-                    m.BloodpointsEarned,
+                    m.IsContaminated,
                     null,
                     new SurvivorMatchDetails(
                         m.Escaped,
-                        m.HatchEscape,
-                        m.GeneratorsCompleted
+                        m.HatchEscape
                     )
                 ));
             }
@@ -174,12 +165,12 @@ public class MatchesController(AppDbContext db) : ControllerBase
         };
 
         var killerMatches = await db.MatchKillers
-            .Where(m => m.UserId == userId && m.PlayedAt >= since)
+            .Where(m => m.UserId == userId && !m.IsContaminated && m.PlayedAt >= since)
             .OrderBy(m => m.PlayedAt)
             .ToListAsync();
 
         var survivorMatches = await db.MatchSurvivors
-            .Where(m => m.UserId == userId && m.PlayedAt >= since)
+            .Where(m => m.UserId == userId && !m.IsContaminated && m.PlayedAt >= since)
             .OrderBy(m => m.PlayedAt)
             .ToListAsync();
 

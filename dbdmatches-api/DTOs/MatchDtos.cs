@@ -13,7 +13,7 @@ public record MatchHistoryItem(
     string Role,
     string Result,
     DateTimeOffset PlayedAt,
-    int BloodpointsEarned,
+    bool IsContaminated,
     KillerMatchDetails? Killer,
     SurvivorMatchDetails? Survivor
 );
@@ -21,17 +21,10 @@ public record MatchHistoryItem(
 public record KillerMatchDetails(
     string KillerName,
     int Sacrifices,
-    int Kills,
-    int PowerStat1,
-    string PowerStat1Label,
-    int PowerStat2,
-    string? PowerStat2Label,
-    int PowerStat3,
-    string? PowerStat3Label
+    int Kills
 );
 
 public record SurvivorMatchDetails(
     bool Escaped,
-    bool HatchEscape,
-    double GeneratorsCompleted
+    bool HatchEscape
 );
