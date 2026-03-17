@@ -245,7 +245,7 @@ export function PlayerMatchesClient({
           Back to Leaderboards
         </button>
         <div className="flex items-center gap-4">
-          <div className="relative inline-block">
+          <div className="relative shrink-0">
             {player.avatarUrl ? (
               <img src={player.avatarUrl} alt={player.displayName} className="h-14 w-14 rounded-full" />
             ) : (
@@ -253,9 +253,9 @@ export function PlayerMatchesClient({
             )}
             <span className={`absolute bottom-0 right-0 h-4 w-4 rounded-full border-2 border-background ${statusColor(player.status as "Offline" | "Online" | "InGame")}`} />
           </div>
-          <div>
-            <h1 className="text-2xl font-bold">{player.displayName}</h1>
-            <a href={player.vanityUrl ? `https://steamcommunity.com/id/${player.vanityUrl}/` : `https://steamcommunity.com/profiles/${steamId}/`} target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-foreground">{player.vanityUrl ? `steamcommunity.com/id/${player.vanityUrl}/` : `steamcommunity.com/profiles/${steamId}/`}</a>
+          <div className="min-w-0">
+            <h1 className="text-2xl font-bold break-words">{player.displayName}</h1>
+            <a href={player.vanityUrl ? `https://steamcommunity.com/id/${player.vanityUrl}/` : `https://steamcommunity.com/profiles/${steamId}/`} target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-foreground break-all">{player.vanityUrl ? `steamcommunity.com/id/${player.vanityUrl}/` : `steamcommunity.com/profiles/${steamId}/`}</a>
             <p className="text-sm text-muted-foreground">{totalCount} matches played</p>
           </div>
         </div>

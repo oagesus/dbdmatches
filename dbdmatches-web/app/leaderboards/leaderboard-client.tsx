@@ -237,22 +237,22 @@ export function LeaderboardClient({
                 className="group rounded-lg border border-border bg-card p-4 hover:border-primary hover:bg-primary/10"
               >
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <span className={`text-lg w-8 text-center ${getRankStyle(item.rank)}`}>
+                  <div className="flex items-center gap-4 min-w-0">
+                    <span className={`text-lg w-8 shrink-0 text-center ${getRankStyle(item.rank)}`}>
                       #{item.rank}
                     </span>
                     {item.avatarUrl ? (
                       <img
                         src={item.avatarUrl}
                         alt={item.displayName}
-                        className="h-10 w-10 rounded-full"
+                        className="h-10 w-10 shrink-0 rounded-full"
                       />
                     ) : (
-                      <div className="h-10 w-10 rounded-full bg-muted" />
+                      <div className="h-10 w-10 shrink-0 rounded-full bg-muted" />
                     )}
-                    <div>
-                      <p className="font-medium">{item.displayName}</p>
-                      <p className="text-xs text-muted-foreground">{item.vanityUrl ? `steamcommunity.com/id/${item.vanityUrl}/` : `steamcommunity.com/profiles/${item.steamId}/`}</p>
+                    <div className="min-w-0">
+                      <p className="font-medium break-words">{item.displayName}</p>
+                      <p className="text-xs text-muted-foreground break-all">{item.vanityUrl ? `steamcommunity.com/id/${item.vanityUrl}/` : `steamcommunity.com/profiles/${item.steamId}/`}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
