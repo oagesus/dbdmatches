@@ -101,12 +101,22 @@ function MatchCard({ match }: { match: MatchHistoryItem }) {
         </div>
 
         {contaminated ? (
-          <p className="text-xs italic text-muted-foreground">Match data may be inaccurate due to non-full-loadout matches played before this match. This match does not count towards streaks.</p>
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
+            {match.role === "killer" && (
+              <span>
+                Kills: <span className="text-foreground font-medium">?</span>
+                <span className="text-xs italic ml-2">Match data may be inaccurate due to non-full-loadout matches played before this match. This match does not count towards streaks.</span>
+              </span>
+            )}
+          </div>
         ) : (
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
             {match.role === "killer" && match.killer && (
               <span>
                 Kills: <span className="text-foreground font-medium">{match.killer.sacrifices + match.killer.kills}</span>
+                {match.killer.killerName === "Untracked Killer" && (
+                  <span className="text-xs italic ml-2">No trackable killer-specific Steam achievement was detected for this match.</span>
+                )}
               </span>
             )}
 
@@ -331,16 +341,16 @@ export function HistoryClient({
 
         <MatchDetectionCard role={currentRole} killer={currentKiller} />
 
-        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-4 text-sm">
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-4 pt-4">
           <div className="flex items-center gap-2">
-            <span className="text-muted-foreground">Current {streakLabel} Streak:</span>
-            <Flame className="h-4 w-4 text-primary" />
-            <span className="font-bold text-lg">{activeStreaks.current}</span>
+            <span className="text-foreground font-semibold text-base">Current {streakLabel} Streak:</span>
+            <Flame className="h-6 w-6 text-orange-500" />
+            <span className="font-bold text-2xl leading-none text-orange-500">{activeStreaks.current}</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-muted-foreground">Best {streakLabel} Streak:</span>
-            <Flame className="h-4 w-4 text-primary" />
-            <span className="font-bold text-lg">{activeStreaks.best}</span>
+            <span className="text-foreground font-semibold text-base">Best {streakLabel} Streak:</span>
+            <Flame className="h-6 w-6 text-orange-500" />
+            <span className="font-bold text-2xl leading-none text-orange-500">{activeStreaks.best}</span>
           </div>
         </div>
 

@@ -202,7 +202,7 @@ export function LeaderboardClient({
 
         <MatchDetectionCard role={currentRole} killer={currentKiller} />
 
-        <div className="grid gap-3 pt-4">
+        <div className="grid gap-3">
           {items.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
               {currentKiller && killerRequirements[currentKiller] === "not trackable" ? (
@@ -251,8 +251,8 @@ export function LeaderboardClient({
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Flame className="h-4 w-4 text-primary" />
-                    <span className="text-lg font-bold">{item.bestStreak}</span>
+                    <Flame className="h-4 w-4 text-orange-500" />
+                    <span className="text-lg font-bold text-orange-500">{item.bestStreak}</span>
                   </div>
                 </div>
               </Link>
