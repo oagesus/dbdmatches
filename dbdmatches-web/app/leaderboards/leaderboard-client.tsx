@@ -7,6 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Clock, Flame, Search } from "lucide-react";
+import { KillerSelect } from "@/components/killer-select";
+import { PeriodSelect } from "@/components/period-select";
+import { MatchDetectionCard } from "@/components/match-detection-card";
+import { killerRequirements } from "@/lib/killer-requirements";
 import type { LeaderboardItem } from "@/lib/leaderboard/get-leaderboard";
 import { PaginationControls } from "@/components/pagination-controls";
 
@@ -180,29 +184,9 @@ export function LeaderboardClient({
         <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
             {currentRole === "killer" && killers.length > 0 && (
-              <Select value={currentKiller || "all"} onValueChange={(v) => setKiller(v === "all" ? "" : v)}>
-                <SelectTrigger className="h-7 w-[180px] text-xs cursor-pointer">
-                  <SelectValue>{currentKiller || "All Killers"}</SelectValue>
-                </SelectTrigger>
-                <SelectContent position="popper" side="bottom" align="start">
-                  <SelectItem value="all" className="cursor-pointer text-xs">All Killers</SelectItem>
-                  {killers.map((k) => (
-                    <SelectItem key={k} value={k} className="cursor-pointer text-xs">{k}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <KillerSelect value={currentKiller} killers={killers} onChange={setKiller} />
             )}
-            <Select value={currentPeriod || "all"} onValueChange={setPeriod}>
-              <SelectTrigger className="h-7 w-[130px] text-xs cursor-pointer">
-                <SelectValue>{{ "all": "All Time", "30d": "Last 30 Days", "90d": "Last 90 Days", "1y": "Last Year" }[currentPeriod || "all"]}</SelectValue>
-              </SelectTrigger>
-              <SelectContent position="popper" side="bottom" align="start">
-                <SelectItem value="all" className="cursor-pointer text-xs">All Time</SelectItem>
-                <SelectItem value="30d" className="cursor-pointer text-xs">Last 30 Days</SelectItem>
-                <SelectItem value="90d" className="cursor-pointer text-xs">Last 90 Days</SelectItem>
-                <SelectItem value="1y" className="cursor-pointer text-xs">Last Year</SelectItem>
-              </SelectContent>
-            </Select>
+            <PeriodSelect value={currentPeriod} onChange={setPeriod} />
           </div>
           <Select value={currentPageSize.toString()} onValueChange={(v) => setPageSize(Number(v))}>
             <SelectTrigger className="h-7 w-[100px] text-xs cursor-pointer">
@@ -216,13 +200,24 @@ export function LeaderboardClient({
           </Select>
         </div>
 
+        <MatchDetectionCard role={currentRole} killer={currentKiller} />
+
         <div className="grid gap-3 pt-4">
           {items.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
-              <p className="text-sm text-muted-foreground">No players found.</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Start playing{currentKiller ? ` ${currentKiller}` : currentRole === "survivor" ? " Survivor" : currentRole === "killer" ? " Killer" : ""} and your streaks will appear here.
-              </p>
+              {currentKiller && killerRequirements[currentKiller] === "not trackable" ? (
+                <>
+                  <p className="text-sm text-destructive">{currentKiller} matches cannot be tracked.</p>
+                  <p className="mt-1 text-sm text-destructive">This killer does not have a unique Steam achievement to track.</p>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm text-muted-foreground">No players found.</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Start playing{currentKiller ? ` ${currentKiller}` : currentRole === "survivor" ? " Survivor" : currentRole === "killer" ? " Killer" : ""} and your streaks will appear here.
+                  </p>
+                </>
+              )}
             </div>
           ) : (
             items.map((item) => (

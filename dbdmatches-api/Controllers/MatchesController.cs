@@ -129,29 +129,7 @@ public class MatchesController(AppDbContext db) : ControllerBase
         if (user == null)
             return NotFound();
 
-        if (period != null)
-        {
-            return Ok(await CalculateStreaksForPeriod(user.Id, period));
-        }
-
-        var streak = await db.Streaks.FirstOrDefaultAsync(s => s.UserId == user.Id);
-        var killerStreaks = await db.StreakKillers
-            .Where(s => s.UserId == user.Id)
-            .OrderByDescending(s => s.BestStreak)
-            .ToListAsync();
-
-        return Ok(new
-        {
-            overall = new { current = streak?.CurrentOverall ?? 0, best = streak?.BestOverall ?? 0 },
-            killer = new { current = streak?.CurrentKiller ?? 0, best = streak?.BestKiller ?? 0 },
-            survivor = new { current = streak?.CurrentSurvivor ?? 0, best = streak?.BestSurvivor ?? 0 },
-            killers = killerStreaks.Select(k => new
-            {
-                killer = k.Killer,
-                current = k.CurrentStreak,
-                best = k.BestStreak
-            })
-        });
+        return Ok(await CalculateStreaksForPeriod(user.Id, period ?? "all"));
     }
 
     private async Task<object> CalculateStreaksForPeriod(int userId, string period)

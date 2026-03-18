@@ -113,43 +113,24 @@ public class LeaderboardController(LeaderboardService leaderboardService, AppDbC
         var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
         var paged = sorted.Skip((page - 1) * pageSize).Take(pageSize).ToList();
 
-        object streaksData;
-        if (since.HasValue)
-        {
-            var allKillerMatches = await db.MatchKillers
-                .Where(m => m.UserId == user.Id && !m.IsContaminated && m.PlayedAt >= since.Value)
-                .OrderBy(m => m.PlayedAt)
-                .ToListAsync();
-            var allSurvivorMatches = await db.MatchSurvivors
-                .Where(m => m.UserId == user.Id && !m.IsContaminated && m.PlayedAt >= since.Value)
-                .OrderBy(m => m.PlayedAt)
-                .ToListAsync();
+        var sinceValue = since ?? DateTimeOffset.MinValue;
+        var allKillerMatches = await db.MatchKillers
+            .Where(m => m.UserId == user.Id && !m.IsContaminated && m.PlayedAt >= sinceValue)
+            .OrderBy(m => m.PlayedAt)
+            .ToListAsync();
+        var allSurvivorMatches = await db.MatchSurvivors
+            .Where(m => m.UserId == user.Id && !m.IsContaminated && m.PlayedAt >= sinceValue)
+            .OrderBy(m => m.PlayedAt)
+            .ToListAsync();
 
-            var calc = StreakCalculator.Calculate(allKillerMatches, allSurvivorMatches);
-            streaksData = new
-            {
-                overall = new { current = calc.Overall.Current, best = calc.Overall.Best },
-                killer = new { current = calc.Killer.Current, best = calc.Killer.Best },
-                survivor = new { current = calc.Survivor.Current, best = calc.Survivor.Best },
-                killers = calc.Killers.Select(k => new { killer = k.Killer, current = k.Current, best = k.Best })
-            };
-        }
-        else
+        var calc = StreakCalculator.Calculate(allKillerMatches, allSurvivorMatches);
+        var streaksData = new
         {
-            var streak = await db.Streaks.FirstOrDefaultAsync(s => s.UserId == user.Id);
-            var killerStreaks = await db.StreakKillers
-                .Where(s => s.UserId == user.Id)
-                .OrderByDescending(s => s.BestStreak)
-                .ToListAsync();
-
-            streaksData = new
-            {
-                overall = new { current = streak?.CurrentOverall ?? 0, best = streak?.BestOverall ?? 0 },
-                killer = new { current = streak?.CurrentKiller ?? 0, best = streak?.BestKiller ?? 0 },
-                survivor = new { current = streak?.CurrentSurvivor ?? 0, best = streak?.BestSurvivor ?? 0 },
-                killers = killerStreaks.Select(k => new { killer = k.Killer, current = k.CurrentStreak, best = k.BestStreak })
-            };
-        }
+            overall = new { current = calc.Overall.Current, best = calc.Overall.Best },
+            killer = new { current = calc.Killer.Current, best = calc.Killer.Best },
+            survivor = new { current = calc.Survivor.Current, best = calc.Survivor.Best },
+            killers = calc.Killers.Select(k => new { killer = k.Killer, current = k.Current, best = k.Best })
+        };
 
         return Ok(new
         {
