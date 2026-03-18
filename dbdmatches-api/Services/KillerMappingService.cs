@@ -107,11 +107,13 @@ public static class KillerMappingService
 
     public static List<string> GetAllKillerNames()
     {
-        return KillerStatMap.Values
+        var killers = KillerStatMap.Values
             .Select(k => k.Name)
             .Distinct()
             .OrderBy(n => n)
             .ToList();
+        killers.Add("Untracked Killer");
+        return killers;
     }
 }
 
