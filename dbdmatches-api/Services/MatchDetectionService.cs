@@ -13,9 +13,6 @@ public class MatchDetectionService(
     private const string SteamApiUrl = "https://api.steampowered.com";
     private const int DbdAppId = 381210;
 
-    private static readonly System.Collections.Concurrent.ConcurrentDictionary<int, bool> _nonLoadoutKillerActivity = new();
-    private static readonly System.Collections.Concurrent.ConcurrentDictionary<int, bool> _nonLoadoutSurvivorActivity = new();
-
     public async Task<Dictionary<string, double>?> FetchPlayerStats(string steamId)
     {
         var apiKey = configuration["Steam:ApiKey"]
@@ -119,23 +116,8 @@ public class MatchDetectionService(
         var nonLoadoutKillerMatch = killerSkullsChanged && killerLoadoutDelta == 0;
         var nonLoadoutSurvivorMatch = survivorSkullsChanged && survivorLoadoutDelta == 0;
 
-        var hasKillerKillsWithoutLoadout = killerLoadoutDelta == 0 &&
-            (deltas.ContainsKey("DBD_SacrificedCampers") || deltas.ContainsKey("DBD_KilledCampers"));
-        if (hasKillerKillsWithoutLoadout)
-            _nonLoadoutKillerActivity[userId] = true;
-
-        var hasSurvivorEscapesWithoutLoadout = survivorLoadoutDelta == 0 &&
-            (deltas.ContainsKey("DBD_Escape") || deltas.ContainsKey("DBD_EscapeThroughHatch"));
-        if (hasSurvivorEscapesWithoutLoadout)
-            _nonLoadoutSurvivorActivity[userId] = true;
-
         if (nonLoadoutKillerMatch || nonLoadoutSurvivorMatch)
         {
-            if (nonLoadoutKillerMatch)
-                _nonLoadoutKillerActivity.TryRemove(userId, out _);
-            if (nonLoadoutSurvivorMatch)
-                _nonLoadoutSurvivorActivity.TryRemove(userId, out _);
-
             logger.LogInformation("Non-loadout match detected for user {UserId} (killerSkullsChanged={KillerChanged}, survivorSkullsChanged={SurvivorChanged}). Consuming stats.",
                 userId, killerSkullsChanged, survivorSkullsChanged);
         }
@@ -143,15 +125,30 @@ public class MatchDetectionService(
         {
             logger.LogWarning("Multiple matches detected between polls for user {UserId} (killer={KillerDelta}, survivor={SurvivorDelta}). Skipping match creation.",
                 userId, killerLoadoutDelta, survivorLoadoutDelta);
-            _nonLoadoutKillerActivity.TryRemove(userId, out _);
-            _nonLoadoutSurvivorActivity.TryRemove(userId, out _);
         }
         else if (killerLoadoutDelta == 1)
         {
-            var hadNonLoadoutActivity = _nonLoadoutKillerActivity.TryRemove(userId, out _);
             var killerInfo = KillerMappingService.IdentifyKiller(deltas);
-            var sacrificesDelta = hadNonLoadoutActivity ? 0 : (int)deltas.GetValueOrDefault("DBD_SacrificedCampers");
-            var killsDelta = hadNonLoadoutActivity ? 0 : (int)deltas.GetValueOrDefault("DBD_KilledCampers");
+
+            // Cross-killer contamination: check if stats from a different killer are in the deltas
+            var detectedKillerStatKeys = new HashSet<string>();
+            if (killerInfo != null)
+            {
+                if (killerInfo.Stat1Key != null) detectedKillerStatKeys.Add(killerInfo.Stat1Key);
+                if (killerInfo.Stat2Key != null) detectedKillerStatKeys.Add(killerInfo.Stat2Key);
+                if (killerInfo.Stat3Key != null) detectedKillerStatKeys.Add(killerInfo.Stat3Key);
+            }
+            var hasOtherKillerActivity = deltas.Keys
+                .Any(k => KillerMappingService.AllKillerStatKeys.Contains(k) && !detectedKillerStatKeys.Contains(k));
+
+            var rawSacrifices = (int)deltas.GetValueOrDefault("DBD_SacrificedCampers");
+            var rawKills = (int)deltas.GetValueOrDefault("DBD_KilledCampers");
+            var exceedsMaxEliminations = rawSacrifices + rawKills > 4;
+
+            var isContaminated = hasOtherKillerActivity || exceedsMaxEliminations;
+
+            var sacrificesDelta = isContaminated ? 0 : rawSacrifices;
+            var killsDelta = isContaminated ? 0 : rawKills;
 
             var totalEliminations = sacrificesDelta + killsDelta;
             var result = totalEliminations switch
@@ -172,21 +169,21 @@ public class MatchDetectionService(
                 PowerStat3 = 0,
                 BloodpointsEarned = 0,
                 Result = result,
-                IsContaminated = hadNonLoadoutActivity,
+                IsContaminated = isContaminated,
                 PlayedAt = DateTimeOffset.UtcNow
             };
 
             db.MatchKillers.Add(match);
-            if (!hadNonLoadoutActivity)
+            if (!isContaminated)
                 await UpdateStreaks(db, userId, result, isKiller: true, killerName: match.Killer);
             logger.LogInformation("Detected killer match for user {UserId}: {Killer}, {Eliminations} eliminations, {Result}{Contaminated}",
-                userId, match.Killer, totalEliminations, result, hadNonLoadoutActivity ? " (contaminated)" : "");
+                userId, match.Killer, totalEliminations, result,
+                isContaminated ? $" (contaminated{(hasOtherKillerActivity ? " - other killer stats" : "")}{(exceedsMaxEliminations ? $" - {rawSacrifices + rawKills} eliminations exceeds max" : "")})" : "");
         }
         else if (survivorLoadoutDelta == 1)
         {
-            var hadNonLoadoutActivity = _nonLoadoutSurvivorActivity.TryRemove(userId, out _);
-            var escapeDelta = hadNonLoadoutActivity ? 0 : (int)deltas.GetValueOrDefault("DBD_Escape");
-            var hatchDelta = hadNonLoadoutActivity ? 0 : (int)deltas.GetValueOrDefault("DBD_EscapeThroughHatch");
+            var escapeDelta = (int)deltas.GetValueOrDefault("DBD_Escape");
+            var hatchDelta = (int)deltas.GetValueOrDefault("DBD_EscapeThroughHatch");
             var escaped = escapeDelta > 0;
             var hatchEscape = hatchDelta > 0;
 
@@ -198,15 +195,14 @@ public class MatchDetectionService(
                 GeneratorsCompleted = 0,
                 BloodpointsEarned = 0,
                 Result = escaped ? MatchResult.Win : MatchResult.Loss,
-                IsContaminated = hadNonLoadoutActivity,
+                IsContaminated = false,
                 PlayedAt = DateTimeOffset.UtcNow
             };
 
             db.MatchSurvivors.Add(match);
-            if (!hadNonLoadoutActivity)
-                await UpdateStreaks(db, userId, match.Result, isKiller: false, killerName: null);
-            logger.LogInformation("Detected survivor match for user {UserId}: escaped={Escaped}, {Result}{Contaminated}",
-                userId, escaped, match.Result, hadNonLoadoutActivity ? " (contaminated)" : "");
+            await UpdateStreaks(db, userId, match.Result, isKiller: false, killerName: null);
+            logger.LogInformation("Detected survivor match for user {UserId}: escaped={Escaped}, {Result}",
+                userId, escaped, match.Result);
         }
 
         var matchCreated = killerLoadoutDelta == 1 || survivorLoadoutDelta == 1;
@@ -215,8 +211,6 @@ public class MatchDetectionService(
         HashSet<string> deferredStats = [
             "DBD_SacrificedCampers",
             "DBD_KilledCampers",
-            "DBD_Escape",
-            "DBD_EscapeThroughHatch",
             "DBD_SlasherFullLoadout",
             "DBD_CamperFullLoadout",
             "DBD_KillerSkulls",

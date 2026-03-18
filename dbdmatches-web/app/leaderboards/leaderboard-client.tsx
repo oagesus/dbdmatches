@@ -182,7 +182,7 @@ export function LeaderboardClient({
             {currentRole === "killer" && killers.length > 0 && (
               <Select value={currentKiller || "all"} onValueChange={(v) => setKiller(v === "all" ? "" : v)}>
                 <SelectTrigger className="h-7 w-[180px] text-xs cursor-pointer">
-                  <SelectValue placeholder="All Killers" />
+                  <SelectValue>{currentKiller || "All Killers"}</SelectValue>
                 </SelectTrigger>
                 <SelectContent position="popper" side="bottom" align="start">
                   <SelectItem value="all" className="cursor-pointer text-xs">All Killers</SelectItem>

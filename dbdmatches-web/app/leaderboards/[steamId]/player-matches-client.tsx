@@ -263,7 +263,7 @@ export function PlayerMatchesClient({
             {currentRole === "killer" && killers.length > 0 && (
               <Select value={currentKiller || "all"} onValueChange={(v) => setKiller(v === "all" ? "" : v)}>
                 <SelectTrigger className="h-7 w-[180px] text-xs cursor-pointer">
-                  <SelectValue placeholder="All Killers" />
+                  <SelectValue>{currentKiller || "All Killers"}</SelectValue>
                 </SelectTrigger>
                 <SelectContent position="popper" side="bottom" align="start">
                   <SelectItem value="all" className="cursor-pointer text-xs">All Killers</SelectItem>
@@ -309,6 +309,13 @@ export function PlayerMatchesClient({
             <span className="font-bold text-lg">{activeStreaks.best}</span>
           </div>
         </div>
+
+        {currentRole === "killer" && (
+          <p className="text-xs text-muted-foreground italic">Only matches played with a full loadout (4 perks, 2 add-ons, and an offering) are tracked.</p>
+        )}
+        {currentRole === "survivor" && (
+          <p className="text-xs text-muted-foreground italic">Only matches played with a full loadout (4 perks, 1 item with 2 add-ons, and an offering) are tracked.</p>
+        )}
 
         <div className="grid gap-3 pt-4">
           {matches.length === 0 ? (
