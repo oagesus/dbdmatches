@@ -38,7 +38,9 @@ export function MatchDetectionCard({ role, killer }: MatchDetectionCardProps) {
               <>
                 <p>1. Only matches played with a <span className="text-foreground font-medium">full-loadout</span> (4 perks, 2 add-ons, and an offering) can be tracked.</p>
                 <p>2. Killer matches can be tagged as <span className="text-foreground font-medium">&quot;Contaminated&quot;</span> if a non-full-loadout match was played before and will not count towards streaks.</p>
-                {killer && killerRequirements[killer] && (
+                {killer === "Untracked Killer" ? (
+                  <p>3. Matches where no unique killer power stat was detected are tagged as <span className="text-foreground font-medium">&quot;Untracked Killer&quot;</span>.</p>
+                ) : killer && killerRequirements[killer] && (
                   <p>3. {killer} requires <span className="text-foreground font-medium">{killerRequirements[killer]}</span>, otherwise the match is tagged as <span className="text-foreground font-medium">&quot;Untracked Killer&quot;</span>.</p>
                 )}
               </>
