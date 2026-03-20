@@ -8,7 +8,7 @@ public static class KillerMappingService
         ["DBD_UncloakAttack"] = new("The Wraith", "DBD_UncloakAttack", null), //stat: hits after uncloak
         ["DBD_ChainsawHit"] = new("The Hillbilly", "DBD_ChainsawHit", null), // NEEDS CHECKING (BUG)
         ["DBD_SlasherChainAttack"] = new("The Nurse", "DBD_SlasherChainAttack", null), //stat1: blink attack
-        ["DBD_SlasherTierIncrement"] = new("The Shape", null, null), // NOT TRACKABLE
+        //["DBD_SlasherTierIncrement"] = new("The Shape", null, null), // NOT TRACKABLE
         ["DBD_DLC3_Slasher_Stat1"] = new("The Hag", "DBD_DLC3_Slasher_Stat1", "DBD_DLC3_Slasher_Stat2"), //stat1: traps triggered, stat2: trials where all survivors were hit after teleport
         ["DBD_DLC4_Slasher_Stat1"] = new("The Doctor", "DBD_DLC4_Slasher_Stat1", "DBD_DLC4_Slasher_Stat2"), //stat1: shocks, stat2: trials with all survivors simultaneously in tier 3 madness
         ["DBD_DLC5_Slasher_Stat1"] = new("The Huntress", "DBD_DLC5_Slasher_Stat1", "DBD_DLC5_Slasher_Stat2"), //stat1: hatchets thrown, stat2: survivors downed with a hatched (24+ meters)
@@ -17,10 +17,10 @@ public static class KillerMappingService
         ["DBD_DLC8_Slasher_Stat1"] = new("The Pig", "DBD_DLC8_Slasher_Stat1", null), //stat1: reverse bear-traps applied
         ["DBD_DLC9_Slasher_Stat2"] = new("The Clown", null, "DBD_DLC9_Slasher_Stat2"), //stat2: intoxicated survivors downed
         ["DBD_Chapter9_Slasher_Stat2"] = new("The Spirit", null, "DBD_Chapter9_Slasher_Stat2"), //stat2: survivors downed after phase walk
-        ["DBD_Chapter10_Slasher_Stat1"] = new("The Legion", null, "DBD_Chapter10_Slasher_Stat2"), //stat2: deep-wounded survivors downed
-        ["DBD_Chapter11_Slasher_Stat1"] = new("The Plague", null, "DBD_Chapter11_Slasher_Stat2"), //stat2: max sickness survivors downed
+        ["DBD_Chapter10_Slasher_Stat2"] = new("The Legion", null, "DBD_Chapter10_Slasher_Stat2"), //stat2: deep-wounded survivors downed
+        ["DBD_Chapter11_Slasher_Stat2"] = new("The Plague", null, "DBD_Chapter11_Slasher_Stat2"), //stat2: max sickness survivors downed
         ["DBD_Chapter12_Slasher_Stat2"] = new("The Ghost Face", null, "DBD_Chapter12_Slasher_Stat2"), //stat2: marked survivors downed
-        ["DBD_Chapter13_Slasher_Stat1"] = new("The Demogorgon", null, null), // NOT TRACKABLE
+        //["DBD_Chapter13_Slasher_Stat1"] = new("The Demogorgon", null, null), // NOT TRACKABLE
         ["DBD_Chapter14_Slasher_Stat2"] = new("The Oni", null, "DBD_Chapter14_Slasher_Stat2"), //stat2: demon fury downs
         ["DBD_Chapter15_Slasher_Stat1"] = new("The Deathslinger", "DBD_Chapter15_Slasher_Stat1", null), //stat1: speared survivors downed
         ["DBD_Chapter16_Slasher_Stat1"] = new("The Executioner", "DBD_Chapter16_Slasher_Stat1", null), //stat1: survivors caged
@@ -28,7 +28,7 @@ public static class KillerMappingService
         ["DBD_Chapter18_Slasher_Stat1"] = new("The Twins", "DBD_Chapter18_Slasher_Stat1", null), //stat1: survivors downed with victor latched on
         ["DBD_Chapter19_Slasher_Stat1"] = new("The Trickster", "DBD_Chapter19_Slasher_Stat1", null), //stat1: max laceration reached
         ["DBD_Chapter20_Slasher_Stat1"] = new("The Nemesis", "DBD_Chapter20_Slasher_Stat1", null), //stat1: contaminated survivors downed
-        ["DBD_Chapter21_Slasher_Stat1"] = new("The Cenobite", null, null), // NOT TRACKABLE
+        //["DBD_Chapter21_Slasher_Stat1"] = new("The Cenobite", null, null), // NOT TRACKABLE
         ["DBD_Chapter22_Slasher_Stat1"] = new("The Artist", "DBD_Chapter22_Slasher_Stat1", null), //stat1: survivors downed with dire crows
         ["DBD_Chapter23_Slasher_Stat1"] = new("The Onryō", "DBD_Chapter23_Slasher_Stat1", null), //stat1: survivors condemned
         ["DBD_Chapter24_Slasher_Stat1"] = new("The Dredge", "DBD_Chapter24_Slasher_Stat1", null), //stat1: survivors downed in nightfall
@@ -40,7 +40,7 @@ public static class KillerMappingService
         ["DBD_Chapter30_Slasher_Stat1"] = new("The Good Guy", "DBD_Chapter30_Slasher_Stat1", null), //stat1: survivors hit within 3 seconds of a scamper
         ["DBD_Chapter31_Slasher_Stat1"] = new("The Unknown", "DBD_Chapter31_Slasher_Stat1", null), //stat1: survivors hit with a uvx blast
         ["DBD_Chapter32_Slasher_Stat1"] = new("The Lich", "DBD_Chapter32_Slasher_Stat1", null), //stat1: survivors hit within 15 seconds of casting a spell
-        ["DBD_Chapter33_Slasher_Stat1"] = new("The Dark Lord", null, "DBD_Chapter33_Slasher_Stat2"), //stat2: survivors hit with hellfire
+        ["DBD_Chapter33_Slasher_Stat2"] = new("The Dark Lord", null, "DBD_Chapter33_Slasher_Stat2"), //stat2: survivors hit with hellfire
         ["DBD_Chapter34_Slasher_Stat2"] = new("The Houndmaster", null, "DBD_Chapter34_Slasher_Stat2"), //stat2: survivors injured while detained by the dog
         ["DBD_Chapter35_Slasher_Stat1"] = new("The Ghoul", "DBD_Chapter35_Slasher_Stat1", null), //stat1: perfectly timed grab-attacks
         ["DBD_Chapter36_Slasher_Stat1"] = new("The Animatronic", "DBD_Chapter36_Slasher_Stat1", null), //stat1: survivors interrupted in security office

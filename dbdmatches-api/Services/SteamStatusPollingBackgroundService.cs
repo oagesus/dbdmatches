@@ -102,8 +102,14 @@ public class SteamStatusPollingBackgroundService(
 
                 {
                     var matchDetection = scope.ServiceProvider.GetRequiredService<MatchDetectionService>();
-                    foreach (var user in allUsers)
+                    var usersToDetect = allUsers.ToList();
+                    var availableMs = 110_000;
+                    var delayMs = usersToDetect.Count > 1 ? availableMs / usersToDetect.Count : 0;
+                    delayMs = Math.Clamp(delayMs, 0, 1000);
+
+                    for (var i = 0; i < usersToDetect.Count; i++)
                     {
+                        var user = usersToDetect[i];
                         try
                         {
                             await matchDetection.DetectMatch(db, user.Id, user.SteamId);
@@ -112,6 +118,9 @@ public class SteamStatusPollingBackgroundService(
                         {
                             logger.LogError(ex, "Error detecting match for user {UserId}", user.Id);
                         }
+
+                        if (delayMs > 0 && i < usersToDetect.Count - 1)
+                            await Task.Delay(delayMs, stoppingToken);
                     }
                 }
             }
