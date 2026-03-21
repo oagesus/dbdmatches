@@ -74,6 +74,13 @@ public static class KillerMappingService
         "DBD_CamperSkulls"
     ];
 
+    public static readonly List<string> UntrackableKillers =
+    [
+        "The Shape",
+        "The Demogorgon",
+        "The Cenobite"
+    ];
+
     public static readonly string[] KillerGlobalStatKeys =
     [
         "DBD_SacrificedCampers",
@@ -109,11 +116,17 @@ public static class KillerMappingService
     {
         var killers = KillerStatMap.Values
             .Select(k => k.Name)
+            .Union(UntrackableKillers)
             .Distinct()
             .OrderBy(n => n)
             .ToList();
         killers.Add("Untracked Killer");
         return killers;
+    }
+
+    public static bool IsUntrackable(string killerName)
+    {
+        return UntrackableKillers.Contains(killerName);
     }
 }
 

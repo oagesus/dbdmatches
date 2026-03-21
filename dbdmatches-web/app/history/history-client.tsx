@@ -371,7 +371,7 @@ export function HistoryClient({
             <div className="flex flex-col items-center justify-center py-16 text-center">
               {currentKiller && killerRequirements[currentKiller] === "not trackable" ? (
                 <>
-                  <p className="text-destructive">{currentKiller} matches cannot be tracked.</p>
+                  <p className="text-sm text-destructive">{currentKiller} matches cannot be tracked.</p>
                   <p className="mt-1 text-sm text-destructive">
                     This killer does not have a unique Steam achievement to track.
                   </p>
